@@ -1,0 +1,154 @@
+# ============================================================
+# APEX TRADE LAB - TQQQ/SQQQ Strategy Engine (Final)
+# ============================================================
+# PAPER TRADING SIMULATION ONLY. Not financial advice.
+# EVERYTHING FREE - no paid services required.
+# ============================================================
+
+simulation:
+  starting_capital: 100000
+  currency: USD
+  timezone: Australia/Darwin
+  market_timezone: US/Eastern
+  execution_delay: 1
+  slippage_bps: 5
+  commission_per_trade: 0.0
+  max_position_pct: 1.0
+  min_trade_pct: 0.05
+  lookback_days: 400
+
+tickers:
+  index: "^NDX"
+  long_etf: "TQQQ"
+  short_etf: "SQQQ"
+  benchmark: "QQQ"
+
+indicators:
+  sma_fast: 20
+  sma_slow: 250
+  bb_period: 20
+  bb_std: 2.0
+  rsi_period: 14
+  atr_period: 14
+
+strategies:
+  momentum_long_1:
+    name: "Momentum Long"
+    instrument: TQQQ
+    direction: long
+    enabled: true
+    weight: 0.25
+    regime: above_sma250
+    entry: { condition: price_above_upper_bb, confirmation: close_above_sma20 }
+    exit: { condition: close_below_sma20 }
+    sizing: momentum_scaled
+  mean_reversion_long_1:
+    name: "MR Long 1 (SMA20 Pullback)"
+    instrument: TQQQ
+    direction: long
+    enabled: true
+    weight: 0.20
+    regime: above_sma250
+    entry: { condition: pullback_to_sma20, threshold_pct: 1.0 }
+    exit: { condition: extended_above_sma20, threshold_pct: 3.0 }
+    sizing: extension_inverse
+  mean_reversion_long_2:
+    name: "MR Long 2 (Deep Pullback)"
+    instrument: TQQQ
+    direction: long
+    enabled: true
+    weight: 0.20
+    regime: above_sma250
+    entry: { condition: price_below_lower_bb }
+    exit: { condition: price_above_middle_bb }
+    sizing: extension_inverse
+  mean_reversion_long_3:
+    name: "MR Long 3 (SMA250 Bounce)"
+    instrument: TQQQ
+    direction: long
+    enabled: true
+    weight: 0.15
+    regime: near_sma250
+    entry: { condition: near_sma250_reversal, threshold_pct: 3.0 }
+    exit: { condition: extended_above_sma20, threshold_pct: 5.0 }
+    sizing: fixed
+  mean_reversion_short_1:
+    name: "MR Short (Overextension)"
+    instrument: SQQQ
+    direction: short
+    enabled: true
+    weight: 0.08
+    regime: above_sma250
+    entry: { condition: overextended_above_sma20, threshold_pct: 4.0 }
+    exit: { condition: pullback_to_sma20, threshold_pct: 1.0 }
+    sizing: fixed
+  momentum_short_1:
+    name: "Momentum Short 1 (Breakdown)"
+    instrument: SQQQ
+    direction: short
+    enabled: true
+    weight: 0.15
+    regime: below_sma250
+    entry: { condition: breakdown_below_sma250 }
+    exit: { condition: price_above_sma250 }
+    sizing: momentum_scaled
+  momentum_short_2:
+    name: "Momentum Short 2 (Failed Bounce)"
+    instrument: SQQQ
+    direction: short
+    enabled: true
+    weight: 0.12
+    regime: below_sma250
+    entry: { condition: failed_bounce_sma20 }
+    exit: { condition: close_above_sma20_sustained, days: 3 }
+    sizing: fixed
+
+# ============================================================
+# BRANDING & MONETISATION (all free services)
+# ============================================================
+branding:
+  name: "APEX TRADE LAB"
+  tagline: "TQQQ/SQQQ Strategy Engine"
+  site_url: ""                       # Your GitHub Pages URL
+
+  # --- VIP Access ---
+  # Password for VIP tab (friends / donors). Share manually.
+  # Generate hash: python3 -c "import hashlib; print(hashlib.sha256(b'YOUR_PASSWORD').hexdigest())"
+  # NOTE: This is casual security for a static site, not bank-grade.
+  vip_password_hash: ""              # SHA-256 hash of your VIP password
+
+  # --- Stripe Payment Link (free to create) ---
+  # Go to dashboard.stripe.com > Payment Links > New
+  # Set price to $5 (or any amount), copy the link
+  stripe_payment_url: ""             # e.g. https://buy.stripe.com/your-link-id
+
+  # --- Beehiiv Newsletter (free, 2500 subs) ---
+  # Create publication at beehiiv.com > Settings > Subscribe Forms
+  beehiiv_subscribe_url: ""          # e.g. https://embeds.beehiiv.com/your-pub-id
+
+  # --- Contact Form via Formspree (free, 50/month) ---
+  # Create form at formspree.io, get endpoint
+  formspree_endpoint: ""             # e.g. https://formspree.io/f/xyzabcde
+  contact_email: ""                  # Optional display email
+
+  # --- Affiliate Broker Links ---
+  # Sign up for each broker's affiliate/referral program
+  affiliates:
+    - name: "Stake"
+      url: ""
+      tagline: "Commission-free US stocks from Australia"
+    - name: "Interactive Brokers"
+      url: ""
+      tagline: "Lowest margin rates, professional tools"
+    - name: "Webull"
+      url: ""
+      tagline: "Free stocks on signup, commission-free"
+
+outputs:
+  csv_dir: outputs
+  html_dir: outputs
+  equity_csv: equity_curve.csv
+  trades_csv: trade_log.csv
+  signals_csv: daily_signals.csv
+  dashboard_html: index.html
+  state_file: simulation_state.json
