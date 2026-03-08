@@ -6,16 +6,22 @@
 # ============================================================
 
 simulation:
-  starting_capital: 100000
+  starting_capital: 10000        # Changed to your real-world budget
   currency: USD
-  timezone: Australia/Darwin
+  timezone: Australia/Brisbane    # Changed from Darwin to Brisbane
   market_timezone: US/Eastern
-  execution_delay: 1
-  slippage_bps: 5
-  commission_per_trade: 0.0
+  execution_delay: 1             # This accounts for your 7:30 AM execution
+  slippage_bps: 5                # Realistic cost for trading TQQQ
+  commission_per_trade: 0.0      # Assuming you use a free broker like Stake
   max_position_pct: 1.0
   min_trade_pct: 0.05
   lookback_days: 400
+
+branding:
+  name: "APEX TRADE LAB"
+  tagline: "Systematic TQQQ/SQQQ Learning Lab"
+  # Once you buy your domain, put it here:
+  site_url: "https://apextradelab.com"
 
 tickers:
   index: "^NDX"
