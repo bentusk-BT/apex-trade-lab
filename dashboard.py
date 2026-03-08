@@ -290,24 +290,19 @@ def _rtrans(hist):
 def _css(surl):
     return f'''<style>
     :root{{--bg:#060a10;--card:#0d1117;--card2:#151b25;--border:#1c2636;--text:#d4dce8;--muted:#6b7d93;--dim:#3d4f63;--green:#00ffaa;--red:#ff3b5c;--yellow:#ffcc00;--blue:#3b9eff;--purple:#9d7aff}}
-    body{{font-family:'IBM Plex Sans',sans-serif; background:var(--bg); color:var(--text); margin:0; padding:0;}}
-    .hdr{{padding:20px; text-align:center; border-bottom:1px solid var(--border)}}
-    .nav{{display:flex; justify-content:center; gap:10px; padding:10px; background:var(--card)}}
-    .nav button{{background:none; border:1px solid var(--border); color:var(--muted); padding:8px 15px; cursor:pointer; border-radius:4px}}
-    .nav button.on{{border-color:var(--green); color:var(--green)}}
-    .pg{{display:none; padding:20px; max-width:1200px; margin:auto}}
+    body{{font-family:'IBM Plex Sans', sans-serif; background-color:var(--bg); color:var(--text); margin:0; padding:0;}}
+    .hdr{{padding:30px; text-align:center; border-bottom:1px solid var(--border); background:linear-gradient(to bottom, #09121d, var(--bg));}}
+    .hdr h1{{font-family:'Space Mono', monospace; color:var(--green); letter-spacing:3px; margin:0;}}
+    .nav{{display:flex; justify-content:center; gap:8px; padding:15px; background:var(--card); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100;}}
+    .nav button{{background:none; border:1px solid var(--border); color:var(--muted); padding:10px 18px; cursor:pointer; border-radius:4px; font-family:'Space Mono', monospace; font-size:11px; text-transform:uppercase; transition: 0.2s;}}
+    .nav button.on{{border-color:var(--green); color:var(--green); background:rgba(0,255,170,0.05);}}
+    .nav button:hover{{color:var(--text); border-color:var(--dim);}}
+    .pg{{display:none; padding:25px; max-width:1200px; margin:auto; animation: fadeIn 0.3s ease-in;}}
+    @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
     .pg.on{{display:block}}
-    .s{{background:var(--card); border:1px solid var(--border); padding:20px; border-radius:8px; margin-bottom:20px}}
-    .sg{{display:grid; grid-template-columns: repeat(4, 1fr); gap:15px}}
-    .sc{{background:var(--card2); padding:15px; border-radius:8px; text-align:center}}
-    .vl{{font-size:24px; font-weight:bold}}
-    .pos{{color:var(--green)}} .neg{{color:var(--red)}} .y{{color:var(--yellow)}}
-    .ig{{margin-bottom:15px}} .ig label{{display:block; font-size:12px; color:var(--muted)}}
-    .ig input, .ig select{{width:100%; padding:10px; background:var(--card2); border:1px solid var(--border); color:white}}
-    .btn{{width:100%; padding:12px; background:var(--green); border:none; color:black; font-weight:bold; cursor:pointer; border-radius:4px}}
-    table{{width:100%; border-collapse:collapse; font-size:12px}}
-    th{{text-align:left; color:var(--muted); padding:10px; border-bottom:1px solid var(--border)}}
-    td{{padding:10px; border-bottom:1px solid var(--border)}}
+    .s{{background:var(--card); border:1px solid var(--border); padding:25px; border-radius:12px; margin-bottom:20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);}}
+    .sc{{background:var(--card2); padding:20px; border-radius:10px; text-align:center; border:1px solid var(--border);}}
+    .vl{{font-family:'Space Mono', monospace; font-size:26px; font-weight:bold; margin-top:5px;}}
     </style>'''
 
 def _aff_html(affs): return "" # Simplified for now
