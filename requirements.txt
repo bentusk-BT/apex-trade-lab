@@ -1,0 +1,7 @@
+# WhiteLight Paper Trading Simulator - Dependencies
+yfinance>=0.2.31
+pandas>=2.0.0
+numpy>=1.24.0
+plotly>=5.18.0
+pyyaml>=6.0
+pytz>=2023.3
