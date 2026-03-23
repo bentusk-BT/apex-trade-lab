@@ -1,0 +1,25 @@
+{
+  "daily": [
+    {
+      "date": "2026-03-20",
+      "type": "daily",
+      "title": "UPTREND \u2014 $-434 (-0.5%)",
+      "regime": "UPTREND",
+      "day_pnl": -434.25,
+      "day_pct": -0.46,
+      "equity": 93253.36,
+      "ndx": 23898.15,
+      "rsi": 35.1,
+      "ext_sma20": -3.52,
+      "ext_sma250": 1.91,
+      "tqqq_alloc": 21.6,
+      "sqqq_alloc": 0,
+      "trades_today": 1,
+      "observation": "Market remains in UPTREND regime. Added to TQQQ \u2014 continued opportunity detected.",
+      "watch_tomorrow": "NDX near SMA(250) \u2014 regime change possible. Most critical level to monitor.",
+      "learning": "The system runs 7 non-correlated strategies simultaneously. When one underperforms, others compensate. This diversification across strategy types is more valuable than any single strategy's edge."
+    }
+  ],
+  "weekly": [],
+  "monthly": []
+}

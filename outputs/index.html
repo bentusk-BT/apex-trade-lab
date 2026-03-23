@@ -154,7 +154,7 @@ nav{gap:1px}nav button{padding:6px 8px;font-size:11px}
             <div class="tagline">Systematic Trading Research Platform</div>
         </div>
         <div class="hdr-right">
-            <div class="live-badge"><span class="dot"></span> Live &bull; Mar 23, 2026 04:57 UTC</div>
+            <div class="live-badge"><span class="dot"></span> Live &bull; Mar 23, 2026 05:29 UTC</div>
             <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">
                 <span class="theme-icon" id="theme-icon">&#9789;</span>
             </button>
@@ -171,6 +171,17 @@ nav{gap:1px}nav button{padding:6px 8px;font-size:11px}
     <button onclick="go('stress',this)">Stress Test</button>
     <button onclick="go('ai',this)">AI Analyst</button>
     <button onclick="go('learn',this)">Learn</button>
+    <div class="dropdown">
+        <button onclick="this.parentElement.classList.toggle('open')">Journal &#9662;</button>
+        <div class="dropdown-menu">
+            <a onclick="go('jdaily',document.querySelector('[data-pg=jdaily]'));document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'))">Daily Journal</a>
+            <a onclick="go('jweekly',document.querySelector('[data-pg=jweekly]'));document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'))">Weekly Reflections</a>
+            <a onclick="go('jmonthly',document.querySelector('[data-pg=jmonthly]'));document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'))">Monthly Learnings</a>
+        </div>
+    </div>
+    <button data-pg="jdaily" onclick="go('jdaily',this)" style="display:none"></button>
+    <button data-pg="jweekly" onclick="go('jweekly',this)" style="display:none"></button>
+    <button data-pg="jmonthly" onclick="go('jmonthly',this)" style="display:none"></button>
     <div class="dropdown">
         <button onclick="this.parentElement.classList.toggle('open')">Community &#9662;</button>
         <div class="dropdown-menu">
@@ -408,6 +419,38 @@ Full dashboard: [link in bio]
 <h3>Daily routine (Darwin time)</h3><ol><li>Check signal (7:00 AM)</li><li>Review regime</li><li>Read reasoning</li><li>Place trade if allocation changed</li><li>Return tomorrow</li></ol></div></div></div>
 <div class="card"><h2>Inside the System — 7 Strategies</h2><p class="desc">Each strategy has different entry conditions, goals, and risk profiles. They combine for a smoother equity curve.</p>
 <div class="strat-grid"><div class="strat-card"><div class="strat-head"><span>&#128994; Momentum Long</span><span class="strat-inst">TQQQ</span></div><div class="strat-row"><strong>When:</strong> Uptrend</div><div class="strat-row"><strong>Entry:</strong> NDX breaks above upper Bollinger Band + above SMA(20).</div><div class="strat-row"><strong>Goal:</strong> Ride strong upward momentum.</div><div class="strat-row"><strong>Risk:</strong> Stops if NDX closes below SMA(20).</div><div class="strat-row"><strong>Example:</strong> <em>In a strong bull, NDX pushes above the upper BB. System goes heavily long.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128994; MR Long 1 (SMA20 Pullback)</span><span class="strat-inst">TQQQ</span></div><div class="strat-row"><strong>When:</strong> Uptrend</div><div class="strat-row"><strong>Entry:</strong> NDX pulls back to within 1% of SMA(20).</div><div class="strat-row"><strong>Goal:</strong> Buy dips in uptrends.</div><div class="strat-row"><strong>Risk:</strong> Exits if NDX extends 3%+ above SMA(20).</div><div class="strat-row"><strong>Example:</strong> <em>After a 2-3% pullback in a bull market, the system buys expecting a bounce.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128994; MR Long 2 (Deep Pullback)</span><span class="strat-inst">TQQQ</span></div><div class="strat-row"><strong>When:</strong> Uptrend</div><div class="strat-row"><strong>Entry:</strong> NDX drops below lower Bollinger Band but above SMA(250).</div><div class="strat-row"><strong>Goal:</strong> Buy deep dips aggressively.</div><div class="strat-row"><strong>Risk:</strong> Exits above middle BB.</div><div class="strat-row"><strong>Example:</strong> <em>A sharp 5%+ pullback in uptrend — the system sees a sale.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128994; MR Long 3 (SMA250 Bounce)</span><span class="strat-inst">TQQQ</span></div><div class="strat-row"><strong>When:</strong> Near SMA(250)</div><div class="strat-row"><strong>Entry:</strong> NDX within 3% of SMA(250) + bullish candle.</div><div class="strat-row"><strong>Goal:</strong> Catch bounces at the critical SMA(250) support.</div><div class="strat-row"><strong>Risk:</strong> Exits if extended 5%+ above SMA(20).</div><div class="strat-row"><strong>Example:</strong> <em>NDX tests its 250-day average and bounces.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128308; MR Short (Overextension)</span><span class="strat-inst">SQQQ</span></div><div class="strat-row"><strong>When:</strong> Uptrend (extended)</div><div class="strat-row"><strong>Entry:</strong> NDX 4%+ above SMA(20) AND above upper BB.</div><div class="strat-row"><strong>Goal:</strong> Fade extreme overextension.</div><div class="strat-row"><strong>Risk:</strong> Exits when NDX reverts to SMA(20).</div><div class="strat-row"><strong>Example:</strong> <em>After a massive rally, the system takes a small contrarian short.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128308; Momentum Short 1 (Breakdown)</span><span class="strat-inst">SQQQ</span></div><div class="strat-row"><strong>When:</strong> Downtrend</div><div class="strat-row"><strong>Entry:</strong> NDX closes below SMA(250) + below lower BB.</div><div class="strat-row"><strong>Goal:</strong> Ride the downtrend. Size scales with depth.</div><div class="strat-row"><strong>Risk:</strong> Exits when NDX reclaims SMA(250).</div><div class="strat-row"><strong>Example:</strong> <em>NDX breaks its 250-day average — major bearish signal.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128308; Momentum Short 2 (Failed Bounce)</span><span class="strat-inst">SQQQ</span></div><div class="strat-row"><strong>When:</strong> Downtrend</div><div class="strat-row"><strong>Entry:</strong> NDX bounced to SMA(20) then closed below it.</div><div class="strat-row"><strong>Goal:</strong> Short bull traps in bear markets.</div><div class="strat-row"><strong>Risk:</strong> Exits if above SMA(20) for 3 days.</div><div class="strat-row"><strong>Example:</strong> <em>In a downtrend, a rally that fails is a classic short entry.</em></div></div></div></div></div>
+
+<!-- ===== DAILY JOURNAL ===== -->
+<div id="jdaily" class="pg">
+<div class="card"><h2>&#128221; Daily Journal</h2>
+<p class="desc">Automated observations and analysis from each trading day. Every entry captures the market context, what the system did, and why.</p>
+<div class="card-inner" style="margin-bottom:10px;border-left:3px solid var(--green)">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+            <div><strong style="font-size:15px">2026-03-20</strong></div>
+            <div style="font-size:12px;color:var(--muted)">
+                <span class="bull">UPTREND</span> &bull;
+                <span class="">$+0 (+0.0%)</span> &bull;
+                $93,253 &bull; 1 trade
+            </div>
+        </div>
+        <div style="margin-top:8px"></div>
+        
+        </div>
+</div></div>
+
+<!-- ===== WEEKLY REFLECTIONS ===== -->
+<div id="jweekly" class="pg">
+<div class="card"><h2>&#128214; Weekly Reflections</h2>
+<p class="desc">End-of-week reviews: what worked, what didn't, and lessons to carry forward. Generated every Friday.</p>
+<div class="card-inner"><p class="desc">No weekly reflections yet. They are generated every Friday.</p></div>
+</div></div>
+
+<!-- ===== MONTHLY LEARNINGS ===== -->
+<div id="jmonthly" class="pg">
+<div class="card"><h2>&#127891; Monthly Learnings</h2>
+<p class="desc">Monthly performance reviews with strategy analysis, improvement suggestions, and key takeaways.</p>
+<div class="card-inner"><p class="desc">No monthly learnings yet. They are generated at month-end.</p></div>
+</div></div>
 
 <!-- ===== COMMUNITY ===== -->
 <div id="community" class="pg">
