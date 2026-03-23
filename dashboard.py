@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # =====================================================================
 
 def generate_dashboard(equity_history, trade_log, signal_log, stats,
-                       benchmark_data, config, stress_results=None, social_posts=None):
+                       benchmark_data, config, stress_results=None, social_posts=None, journal_data=None):
     D = [r["date"] for r in equity_history]
     EQ = [r["equity"] for r in equity_history]
     TA = [r.get("tqqq_alloc",0) for r in equity_history]
@@ -61,6 +61,7 @@ def generate_dashboard(equity_history, trade_log, signal_log, stats,
     br = config.get("branding",{})
     stress = stress_results or []
     social = social_posts or []
+    journal = journal_data or {"daily": [], "weekly": [], "monthly": []}
     rc = 'bull' if 'UP' in la.get('regime','') else 'bear'
 
     regime_map_data = json.dumps([{"d":D[i],"r":RG[i],"rsi":RSI[i],"e250":E250[i]} for i in range(len(D))])
@@ -101,6 +102,17 @@ def generate_dashboard(equity_history, trade_log, signal_log, stats,
     <button onclick="go('stress',this)">Stress Test</button>
     <button onclick="go('ai',this)">AI Analyst</button>
     <button onclick="go('learn',this)">Learn</button>
+    <div class="dropdown">
+        <button onclick="this.parentElement.classList.toggle('open')">Journal &#9662;</button>
+        <div class="dropdown-menu">
+            <a onclick="go('jdaily',document.querySelector('[data-pg=jdaily]'));document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'))">Daily Journal</a>
+            <a onclick="go('jweekly',document.querySelector('[data-pg=jweekly]'));document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'))">Weekly Reflections</a>
+            <a onclick="go('jmonthly',document.querySelector('[data-pg=jmonthly]'));document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'))">Monthly Learnings</a>
+        </div>
+    </div>
+    <button data-pg="jdaily" onclick="go('jdaily',this)" style="display:none"></button>
+    <button data-pg="jweekly" onclick="go('jweekly',this)" style="display:none"></button>
+    <button data-pg="jmonthly" onclick="go('jmonthly',this)" style="display:none"></button>
     <div class="dropdown">
         <button onclick="this.parentElement.classList.toggle('open')">Community &#9662;</button>
         <div class="dropdown-menu">
@@ -313,6 +325,27 @@ def generate_dashboard(equity_history, trade_log, signal_log, stats,
 <h3>Daily routine (Darwin time)</h3><ol><li>Check signal (7:00 AM)</li><li>Review regime</li><li>Read reasoning</li><li>Place trade if allocation changed</li><li>Return tomorrow</li></ol></div></div></div>
 <div class="card"><h2>Inside the System — 7 Strategies</h2><p class="desc">Each strategy has different entry conditions, goals, and risk profiles. They combine for a smoother equity curve.</p>
 <div class="strat-grid">{_strategies_explained()}</div></div></div>
+
+<!-- ===== DAILY JOURNAL ===== -->
+<div id="jdaily" class="pg">
+<div class="card"><h2>&#128221; Daily Journal</h2>
+<p class="desc">Automated observations and analysis from each trading day. Every entry captures the market context, what the system did, and why.</p>
+{_journal_daily_html(journal)}
+</div></div>
+
+<!-- ===== WEEKLY REFLECTIONS ===== -->
+<div id="jweekly" class="pg">
+<div class="card"><h2>&#128214; Weekly Reflections</h2>
+<p class="desc">End-of-week reviews: what worked, what didn't, and lessons to carry forward. Generated every Friday.</p>
+{_journal_weekly_html(journal)}
+</div></div>
+
+<!-- ===== MONTHLY LEARNINGS ===== -->
+<div id="jmonthly" class="pg">
+<div class="card"><h2>&#127891; Monthly Learnings</h2>
+<p class="desc">Monthly performance reviews with strategy analysis, improvement suggestions, and key takeaways.</p>
+{_journal_monthly_html(journal)}
+</div></div>
 
 <!-- ===== COMMUNITY ===== -->
 <div id="community" class="pg">
@@ -584,6 +617,128 @@ def _trade_row_human(t):
     ps=f"${pnl:+,.0f}" if pnl else "—"
     pc="bull" if pnl>0 else "bear" if pnl<0 else ""
     return f'<tr><td>{t["date"]}</td><td class="{tc}">{tt}</td><td>{t["ticker"]}</td><td class="{"bull" if t["action"]=="BUY" else "bear"}">{t["action"]}</td><td>{t["shares"]:.1f}</td><td>${t["price"]:,.2f}</td><td>${t["value"]:,.0f}</td><td class="{pc}">{ps}</td><td style="font-size:11px">{t.get("strategy","")}</td><td style="font-size:11px;color:var(--muted)">{_human_trade(t)}</td><td>{t.get("regime","")}</td></tr>'
+
+def _journal_daily_html(journal):
+    entries = journal.get("daily", [])
+    if not entries:
+        return '<div class="card-inner"><p class="desc">No daily journal entries yet. They will appear after the next simulation run.</p></div>'
+    html = ""
+    for e in reversed(entries[-30:]):  # Show last 30 days
+        date = e.get("date","")
+        regime = e.get("regime","")
+        rc = "bull" if "UP" in regime else "bear"
+        pnl = e.get("daily_pnl",0)
+        pct = e.get("daily_pct",0)
+        equity = e.get("equity",0)
+        obs = e.get("observations",[])
+        learns = e.get("learnings",[])
+        trades = e.get("trades_today",0)
+        changed = e.get("regime_changed",False)
+
+        change_badge = ' <span style="background:var(--yellow);color:#fff;padding:1px 6px;border-radius:3px;font-size:10px">REGIME CHANGE</span>' if changed else ''
+        pnl_class = "bull" if pnl>0 else "bear" if pnl<0 else ""
+
+        html += f'''<div class="card-inner" style="margin-bottom:10px;border-left:3px solid {'var(--green)' if pnl>=0 else 'var(--red)'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+            <div><strong style="font-size:15px">{date}</strong>{change_badge}</div>
+            <div style="font-size:12px;color:var(--muted)">
+                <span class="{rc}">{regime}</span> &bull;
+                <span class="{pnl_class}">${pnl:+,.0f} ({pct:+.1f}%)</span> &bull;
+                ${equity:,.0f} &bull; {trades} trade{'s' if trades!=1 else ''}
+            </div>
+        </div>
+        <div style="margin-top:8px">{''.join(f'<p style="font-size:13px;margin:4px 0;color:var(--text)">{o}</p>' for o in obs)}</div>
+        {"<div style='margin-top:8px;padding:8px;background:rgba(34,197,94,.05);border-radius:4px'><strong style='font-size:11px;color:var(--green)'>KEY TAKEAWAY:</strong>" + "".join(f"<p style='font-size:12px;margin:2px 0;color:var(--muted)'>{l}</p>" for l in learns) + "</div>" if learns else ""}
+        </div>'''
+    return html
+
+def _journal_weekly_html(journal):
+    entries = journal.get("weekly", [])
+    if not entries:
+        return '<div class="card-inner"><p class="desc">No weekly reflections yet. They are generated every Friday.</p></div>'
+    html = ""
+    for e in reversed(entries[-12:]):
+        week_id = e.get("week_id","")
+        date = e.get("date","")
+        pnl = e.get("week_pnl",0)
+        pct = e.get("week_pct",0)
+        equity = e.get("equity",0)
+        trades = e.get("trades",0)
+        wins = e.get("wins",0)
+        losses = e.get("losses",0)
+        reflections = e.get("reflections",[])
+        worked = e.get("worked",[])
+        didnt = e.get("didnt_work",[])
+        lessons = e.get("lessons",[])
+        rc_changed = e.get("regime_changed",False)
+        pnl_class = "bull" if pnl>=0 else "bear"
+
+        html += f'''<div class="card-inner" style="margin-bottom:12px;border-left:3px solid {'var(--green)' if pnl>=0 else 'var(--red)'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            <strong style="font-size:16px">{week_id} &mdash; ending {date}</strong>
+            <div><span class="{pnl_class}" style="font-size:18px;font-weight:700">{pct:+.1f}%</span> <span style="font-size:13px;color:var(--muted)">(${pnl:+,.0f})</span></div>
+        </div>
+        <div class="grid-3" style="margin-bottom:8px;gap:6px">
+            <div class="card-inner" style="text-align:center;padding:8px"><div class="desc">Portfolio</div><strong>${equity:,.0f}</strong></div>
+            <div class="card-inner" style="text-align:center;padding:8px"><div class="desc">Trades</div><strong>{trades}</strong> <span class="desc">({wins}W / {losses}L)</span></div>
+            <div class="card-inner" style="text-align:center;padding:8px"><div class="desc">Regime</div><strong>{'Changed' if rc_changed else 'Stable'}</strong></div>
+        </div>
+        <div>{''.join(f'<p style="font-size:13px;margin:4px 0">{r}</p>' for r in reflections)}</div>
+        {('<div style="margin-top:6px"><strong style="font-size:11px;color:var(--green)">What worked:</strong>' + ''.join(f'<p style="font-size:12px;margin:2px 0;color:var(--muted)">{w}</p>' for w in worked) + '</div>') if worked else ''}
+        {('<div style="margin-top:4px"><strong style="font-size:11px;color:var(--red)">What didn&rsquo;t:</strong>' + ''.join(f'<p style="font-size:12px;margin:2px 0;color:var(--muted)">{d}</p>' for d in didnt) + '</div>') if didnt else ''}
+        <div style="margin-top:6px;padding:8px;background:rgba(59,130,246,.05);border-radius:4px"><strong style="font-size:11px;color:var(--blue)">LESSONS:</strong>{''.join(f'<p style="font-size:12px;margin:2px 0;color:var(--muted)">{l}</p>' for l in lessons)}</div>
+        </div>'''
+    return html
+
+def _journal_monthly_html(journal):
+    entries = journal.get("monthly", [])
+    if not entries:
+        return '<div class="card-inner"><p class="desc">No monthly learnings yet. They are generated at month-end.</p></div>'
+    html = ""
+    for e in reversed(entries[-6:]):
+        month_id = e.get("month_id","")
+        pnl = e.get("month_pnl",0)
+        pct = e.get("month_pct",0)
+        equity = e.get("equity",0)
+        trades = e.get("trades",0)
+        wr = e.get("win_rate",0)
+        dd = e.get("max_drawdown_pct",0)
+        dom_regime = e.get("dominant_regime","")
+        rc = e.get("regime_changes",0)
+        best = e.get("best_strategy","")
+        worst = e.get("worst_strategy","")
+        strat_pnl = e.get("strategy_pnl",{})
+        insights = e.get("insights",[])
+        learnings = e.get("learnings",[])
+        improvements = e.get("improvements",[])
+        pnl_class = "bull" if pnl>=0 else "bear"
+
+        strat_html = ""
+        if strat_pnl:
+            strat_html = '<div style="margin-top:8px"><strong style="font-size:11px">Strategy P&amp;L:</strong><div class="grid-2" style="gap:4px;margin-top:4px">'
+            for s, v in sorted(strat_pnl.items(), key=lambda x: x[1], reverse=True):
+                sc = "bull" if v>0 else "bear" if v<0 else ""
+                strat_html += f'<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span>{s}</span><span class="{sc}">${v:+,.0f}</span></div>'
+            strat_html += '</div></div>'
+
+        html += f'''<div class="card-inner" style="margin-bottom:14px;border-left:4px solid {'var(--green)' if pnl>=0 else 'var(--red)'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <strong style="font-size:18px">{month_id}</strong>
+            <div><span class="{pnl_class}" style="font-size:22px;font-weight:700">{pct:+.1f}%</span> <span style="font-size:13px;color:var(--muted)">(${pnl:+,.0f})</span></div>
+        </div>
+        <div class="grid-4" style="margin-bottom:10px;gap:6px">
+            <div class="card-inner" style="text-align:center;padding:8px"><div class="desc">Equity</div><strong>${equity:,.0f}</strong></div>
+            <div class="card-inner" style="text-align:center;padding:8px"><div class="desc">Trades</div><strong>{trades}</strong></div>
+            <div class="card-inner" style="text-align:center;padding:8px"><div class="desc">Win Rate</div><strong>{wr:.0f}%</strong></div>
+            <div class="card-inner" style="text-align:center;padding:8px"><div class="desc">Max DD</div><strong class="bear">{dd:.1f}%</strong></div>
+        </div>
+        <div style="margin-bottom:6px"><span class="desc">Regime: </span><strong>{dom_regime}</strong> <span class="desc">({rc} changes)</span></div>
+        <div>{''.join(f'<p style="font-size:13px;margin:4px 0">{i}</p>' for i in insights)}</div>
+        {strat_html}
+        <div style="margin-top:8px;padding:8px;background:rgba(59,130,246,.05);border-radius:4px"><strong style="font-size:11px;color:var(--blue)">LEARNINGS:</strong>{''.join(f'<p style="font-size:12px;margin:2px 0;color:var(--muted)">{l}</p>' for l in learnings)}</div>
+        {('<div style="margin-top:6px;padding:8px;background:rgba(245,158,11,.05);border-radius:4px"><strong style="font-size:11px;color:var(--yellow)">IMPROVEMENTS:</strong>' + ''.join(f'<p style="font-size:12px;margin:2px 0;color:var(--muted)">{im}</p>' for im in improvements) + '</div>') if improvements else ''}
+        </div>'''
+    return html
 
 def _strategies_explained():
     strats = [
