@@ -1,0 +1,594 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>APEX TRADE LAB — Systematic Trading Research</title>
+<meta name="description" content="Free autonomous paper trading. 7-strategy TQQQ/SQQQ system with AI analyst, regime analysis, stress testing.">
+<meta property="og:title" content="APEX TRADE LAB"><meta name="theme-color" content="#22c55e">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9889;</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #f8fafc; --card: #fff; --card-inner: #f8fafc; --border: #e2e8f0;
+    --text: #1e293b; --muted: #64748b; --grid-color: #f3f4f6;
+    --green: #22c55e; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6; --purple: #7c3aed;
+    --input-bg: #fff; --input-border: #d1d5db; --th-head: #f8fafc;
+    --chat-u: #f0fdf4; --chat-u-border: #dcfce7; --chat-a: #fff; --chat-a-border: #e2e8f0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:14px;transition:background .2s,color .2s}
+::selection{background:var(--green);color:#fff}
+
+/* Header */
+header{background:var(--card);border-bottom:1px solid var(--border);padding:16px 24px;transition:background .2s}
+.hdr-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.hdr-brand{}
+.logo{font-family:'Source Code Pro',monospace;font-size:22px;font-weight:700;color:var(--text);letter-spacing:1px}
+.tagline{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.live-badge{font-size:11px;color:var(--muted)}
+.dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:3px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.theme-toggle{background:var(--card-inner);border:1px solid var(--border);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.2s;color:var(--text)}
+.theme-toggle:hover{border-color:var(--green)}
+
+/* Nav */
+nav{display:flex;gap:2px;justify-content:center;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--border);flex-wrap:wrap;position:sticky;top:0;z-index:100;transition:background .2s}
+nav button{background:none;border:none;color:var(--muted);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
+nav button:hover{color:var(--text);background:var(--card-inner)}
+nav button.on{color:var(--green);background:rgba(34,197,94,.08);font-weight:600}
+.dropdown{position:relative}.dropdown-menu{display:none;position:absolute;top:100%;left:0;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:160px;z-index:200;padding:4px}
+.dropdown.open .dropdown-menu{display:block}.dropdown-menu a{display:block;padding:8px 14px;color:var(--text);font-size:13px;cursor:pointer;border-radius:4px}.dropdown-menu a:hover{background:rgba(34,197,94,.08);color:var(--green)}
+
+.pg{display:none;padding:16px;max-width:1200px;margin:0 auto}.pg.on{display:block}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:background .2s,border-color .2s}
+.card h2{font-size:16px;font-weight:600;margin-bottom:10px}.card h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.card-inner{background:var(--card-inner);border:1px solid var(--border);border-radius:8px;padding:14px;transition:background .2s}
+.desc{color:var(--muted);font-size:13px;margin-bottom:8px}
+.bull{color:#16a34a}.bear{color:#dc2626}.te{color:#16a34a;font-weight:600}.tx{color:#dc2626;font-weight:600}.ta{color:#2563eb}.tr{color:#d97706}
+
+/* Signal Card */
+.signal-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:all .2s}
+.signal-card.bull{border-color:var(--green)}.signal-card.bear{border-color:var(--red)}
+.sc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.sc-badge{font-family:'Source Code Pro',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;background:var(--card-inner);padding:4px 12px;border-radius:4px;border:1px solid var(--border)}
+.sc-next{font-size:11px;color:var(--muted)}
+.sc-grid{display:grid;grid-template-columns:1fr 1fr 2fr 2fr;gap:20px;align-items:start}
+.sc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.sc-val{font-family:'Source Code Pro',monospace;font-weight:700}.sc-val.bull{color:#16a34a}.sc-val.bear{color:#dc2626}
+.sc-alloc-bars{display:flex;flex-direction:column;gap:8px}
+.ab{display:flex;align-items:center;gap:8px}.ab-l{width:38px;font-size:11px;color:var(--muted)}.ab-track{flex:1;height:10px;background:var(--card-inner);border-radius:5px;overflow:hidden;border:1px solid var(--border)}
+.ab-fill{height:100%;border-radius:5px;transition:width .3s}.ab-fill.bull{background:var(--green)}.ab-fill.bear{background:var(--red)}.ab-fill.cash{background:#94a3b8}.ab-v{width:36px;font-size:12px;font-weight:600;text-align:right;font-family:'Source Code Pro',monospace}
+.sc-ctx{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}
+.sc-reason{margin-top:16px;padding:12px;background:var(--card-inner);border-radius:6px;font-size:13px;color:var(--muted);border-left:3px solid var(--green)}
+.signal-card.bear .sc-reason{border-left-color:var(--red)}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;transition:background .2s}
+.stat-l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}.stat-v{font-family:'Source Code Pro',monospace;font-size:20px;font-weight:700;margin-top:2px}
+
+/* Weekly Summary */
+.weekly-card{border-color:var(--green);border-width:1px}
+.wk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.wk-item{text-align:center;padding:10px;background:var(--card-inner);border-radius:8px;border:1px solid var(--border)}
+.wk-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}.wk-val{font-family:'Source Code Pro',monospace;font-size:18px;font-weight:700;margin-top:4px}
+
+/* Regime */
+.regime-strip,.regime-strip-full{display:flex;border-radius:4px;overflow:hidden;margin-top:8px}
+.regime-badge-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.regime-badge{font-family:'Source Code Pro',monospace;font-size:18px;font-weight:700;padding:10px 24px;border-radius:8px;border:2px solid}
+.regime-badge.bull{color:#16a34a;border-color:var(--green);background:rgba(34,197,94,.08)}.regime-badge.bear{color:#dc2626;border-color:var(--red);background:rgba(239,68,68,.08)}
+.regime-metas{display:flex;gap:16px;font-size:13px;color:var(--muted)}
+
+/* Grids */
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;text-align:center;font-size:13px}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--th-head);color:var(--muted);padding:8px 6px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.3px;font-weight:600;border-bottom:2px solid var(--border)}
+td{padding:6px;border-bottom:1px solid var(--border)}.tbl-wrap{overflow-x:auto}.mini-tbl{font-size:12px}.mini-tbl th{font-size:9px}
+
+/* Calculators */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.calc-in{display:flex;flex-direction:column;gap:6px}.calc-out{background:var(--card-inner);border:1px solid var(--border);border-radius:8px;padding:16px}
+.fg{margin-bottom:6px}.fg label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.fg input,.fg select{width:100%;padding:8px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;font-family:'Source Code Pro',monospace;background:var(--input-bg);color:var(--text);transition:background .2s,border-color .2s}
+.btn{background:var(--green);color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px}.btn:hover{filter:brightness(.9)}
+.btn-s{background:var(--yellow);color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-weight:600;font-size:11px}
+.rr{display:flex;justify-content:space-between;margin:3px 0;font-size:13px}.rr span:first-child{color:var(--muted)}.rr span:last-child{font-family:'Source Code Pro',monospace;font-weight:600}
+.note{color:var(--yellow);font-size:11px;margin-top:6px}.formula{background:rgba(34,197,94,.06);padding:6px 10px;border-radius:4px;font-family:'Source Code Pro',monospace;font-size:12px;margin:6px 0;color:#16a34a;border:1px solid rgba(34,197,94,.15)}
+.result{margin-top:6px;font-family:'Source Code Pro',monospace;font-size:13px}.placeholder{color:var(--muted);text-align:center;padding:20px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}.hint a{color:var(--blue)}
+
+/* Strategy cards */
+.strat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.strat-card{background:var(--card-inner);border:1px solid var(--border);border-radius:8px;padding:14px}
+.strat-head{display:flex;justify-content:space-between;font-weight:600;margin-bottom:8px;font-size:14px}
+.strat-inst{font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(34,197,94,.08);color:#16a34a}
+.strat-row{font-size:12px;margin:4px 0;color:var(--muted)}.strat-row strong{color:var(--text)}
+
+/* Chat */
+.chat-box{display:flex;flex-direction:column;height:460px;background:var(--card-inner);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.chat-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.chat-msg{padding:8px 12px;border-radius:8px;font-size:12px;max-width:85%;white-space:pre-wrap;line-height:1.5}
+.chat-u{background:var(--chat-u);align-self:flex-end;border:1px solid var(--chat-u-border)}.chat-a{background:var(--chat-a);align-self:flex-start;border:1px solid var(--chat-a-border)}
+.chat-suggest{display:flex;flex-wrap:wrap;gap:4px;padding:6px;border-top:1px solid var(--border)}
+.chat-suggest button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:14px;cursor:pointer;font-size:10px}.chat-suggest button:hover{border-color:var(--green);color:#16a34a}
+.chat-input{display:flex;gap:4px;padding:6px;border-top:1px solid var(--border)}
+.chat-input input{flex:1;padding:8px 12px;border:1px solid var(--input-border);border-radius:6px;font-size:12px;outline:none;background:var(--input-bg);color:var(--text)}
+.chat-input button{background:var(--green);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+
+/* Social posts */
+.social-pre{background:var(--card-inner);padding:10px;border-radius:6px;font-size:11px;white-space:pre-wrap;border:1px solid var(--border);color:var(--text);font-family:'Source Code Pro',monospace}
+
+/* Subscribe */
+.math-gate{background:var(--card-inner);border:1px solid var(--border);border-radius:8px;padding:14px;max-width:340px}.mq{margin:6px 0}
+
+/* Start Here */
+.start-here{border:2px solid var(--green);background:rgba(34,197,94,.03)}.start-here h2{color:#16a34a}
+.start-here ol{margin:8px 0 8px 20px;color:var(--muted)}.start-here ol li{margin:4px 0}
+
+/* Tooltips */
+.tip{color:var(--muted);cursor:help;font-size:14px;margin-left:4px}
+.tip-box{position:absolute;background:#1e293b;color:#f1f5f9;padding:6px 10px;border-radius:6px;font-size:11px;max-width:240px;z-index:300;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+
+footer{text-align:center;padding:20px;color:var(--muted);font-size:11px;border-top:1px solid var(--border);margin-top:20px}footer p{margin:3px 0}
+
+@media(max-width:768px){
+.sc-grid{grid-template-columns:1fr 1fr}.stats-row,.wk-grid{grid-template-columns:repeat(2,1fr)}
+.calc-grid,.grid-2,.grid-3,.grid-4,.strat-grid{grid-template-columns:1fr}
+.hdr-inner{flex-direction:column;text-align:center}
+nav{gap:1px}nav button{padding:6px 8px;font-size:11px}
+}
+</style></head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="hdr-inner">
+        <div class="hdr-brand">
+            <div class="logo">&#9889; APEX TRADE LAB</div>
+            <div class="tagline">Systematic Trading Research Platform</div>
+        </div>
+        <div class="hdr-right">
+            <div class="live-badge"><span class="dot"></span> Live &bull; Mar 23, 2026 04:57 UTC</div>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">
+                <span class="theme-icon" id="theme-icon">&#9789;</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<nav>
+    <button class="on" onclick="go('dash',this)">Dashboard</button>
+    <button onclick="go('trades',this)">Trades</button>
+    <button onclick="go('pnl',this)">P&amp;L</button>
+    <button onclick="go('tools',this)">Trade Tools</button>
+    <button onclick="go('regime',this)">Market Regime</button>
+    <button onclick="go('stress',this)">Stress Test</button>
+    <button onclick="go('ai',this)">AI Analyst</button>
+    <button onclick="go('learn',this)">Learn</button>
+    <div class="dropdown">
+        <button onclick="this.parentElement.classList.toggle('open')">Community &#9662;</button>
+        <div class="dropdown-menu">
+            <a onclick="go('community',document.querySelector('[data-pg=community]'));document.querySelector('.dropdown').classList.remove('open')">Subscribe</a>
+            <a onclick="go('vip',document.querySelector('[data-pg=vip]'));document.querySelector('.dropdown').classList.remove('open')">VIP Access</a>
+            <a onclick="go('services',document.querySelector('[data-pg=services]'));document.querySelector('.dropdown').classList.remove('open')">Services</a>
+        </div>
+    </div>
+    <button data-pg="community" onclick="go('community',this)" style="display:none"></button>
+    <button data-pg="vip" onclick="go('vip',this)" style="display:none"></button>
+    <button data-pg="services" onclick="go('services',this)" style="display:none"></button>
+</nav>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="dash" class="pg on">
+
+<!-- Signal Card -->
+<div class="signal-card bull">
+    <div class="sc-top">
+        <div class="sc-badge">CURRENT SIGNAL</div>
+        <div class="sc-next">Next review: Monday Mar 23 ~7:00 AM Darwin</div>
+    </div>
+    <div class="sc-grid">
+        <div class="sc-col">
+            <div class="sc-label">Regime</div>
+            <div class="sc-val bull" style="font-size:20px">UPTREND</div>
+        </div>
+        <div class="sc-col">
+            <div class="sc-label">Action</div>
+            <div class="sc-val bull" style="font-size:20px">Light TQQQ (22%)</div>
+        </div>
+        <div class="sc-col sc-alloc-col">
+            <div class="sc-label">Allocation</div>
+            <div class="sc-alloc-bars">
+                <div class="ab"><span class="ab-l">TQQQ</span><div class="ab-track"><div class="ab-fill bull" style="width:21.6%"></div></div><span class="ab-v">22%</span></div>
+                <div class="ab"><span class="ab-l">SQQQ</span><div class="ab-track"><div class="ab-fill bear" style="width:0%"></div></div><span class="ab-v">0%</span></div>
+                <div class="ab"><span class="ab-l">Cash</span><div class="ab-track"><div class="ab-fill cash" style="width:78.4%"></div></div><span class="ab-v">78%</span></div>
+            </div>
+        </div>
+        <div class="sc-col">
+            <div class="sc-label">Context</div>
+            <div class="sc-ctx">
+                <span>NDX <strong>23,898</strong></span>
+                <span>RSI <strong>35</strong></span>
+                <span>vs SMA250 <strong class="bull">+1.9%</strong></span>
+            </div>
+            <div class="sc-label" style="margin-top:6px">Active</div>
+            <div style="font-size:12px">MR Long 2 (Deep Pullback), MR Long 3 (SMA250 Bounce)</div>
+        </div>
+    </div>
+    <div class="sc-reason"><strong>Why:</strong> Mean Reversion Long 2 (Deep Pullback): Mean Reversion Long 2: deep pullback below lower BB, ext=-3.5%.  Mean Reversion Long 3 (SMA250 Bounce): Mean Reversion Long 3: near SMA250 but no reversal candle</div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat"><div class="stat-l">Portfolio <span class="tip" data-tip="Total paper portfolio value.">&#9432;</span></div><div class="stat-v bull">$93,253</div></div>
+    <div class="stat"><div class="stat-l">Return <span class="tip" data-tip="Total gain/loss since start.">&#9432;</span></div><div class="stat-v bear">-6.8%</div></div>
+    <div class="stat"><div class="stat-l">CAGR <span class="tip" data-tip="Annualised compound return.">&#9432;</span></div><div class="stat-v">-32.9%</div></div>
+    <div class="stat"><div class="stat-l">Sharpe <span class="tip" data-tip="Risk-adjusted return. Above 1 is good, above 2 is great.">&#9432;</span></div><div class="stat-v">-3.44</div></div>
+    <div class="stat"><div class="stat-l">Max DD <span class="tip" data-tip="Largest peak-to-trough decline.">&#9432;</span></div><div class="stat-v bear">-7.2%</div></div>
+    <div class="stat"><div class="stat-l">Win Rate <span class="tip" data-tip="% of profitable closed trades.">&#9432;</span></div><div class="stat-v">27%</div></div>
+</div>
+
+<!-- Weekly Summary -->
+<div class="card weekly-card">
+    <h2>Performance Summary</h2>
+    <div class="wk-grid">
+        <div class="wk-item"><div class="wk-label">This Week</div><div class="wk-val bear">-2.3%</div></div>
+        <div class="wk-item"><div class="wk-label">Month to Date</div><div class="wk-val bear">-2.3%</div></div>
+        <div class="wk-item"><div class="wk-label">Total Return</div><div class="wk-val bear">-6.8%</div></div>
+        <div class="wk-item"><div class="wk-label">Regime</div><div class="wk-val bull">UPTREND</div></div>
+        <div class="wk-item"><div class="wk-label">Trades This Week</div><div class="wk-val">4</div></div>
+        <div class="wk-item"><div class="wk-label">Max Drawdown</div><div class="wk-val bear">-7.2%</div></div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="card"><h2>Equity Curve vs QQQ Benchmark</h2><div id="eq-c"></div></div>
+<div class="card"><h2>Drawdown</h2><p class="desc">How far the portfolio has fallen from its peak at each point in time. Shallower and shorter drawdowns indicate better risk management.</p><div id="dd-c"></div></div>
+<div class="card"><h2>NDX Price — Signals &amp; Regime</h2>
+    <p class="desc">Green &#9650; = buy | Red &#9660; = sell | Background shading = market regime</p>
+    <div id="nx-c"></div>
+    <div class="regime-strip" id="regime-strip"></div>
+</div>
+<div class="card"><h2>Portfolio Allocation</h2><div id="al-c"></div></div>
+</div>
+
+<!-- ===== TRADES ===== -->
+<div id="trades" class="pg">
+<div class="card"><h2>Trade History</h2>
+<p class="desc">Every trade with the strategy that triggered it and a plain-English explanation.</p>
+<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Ticker</th><th>Side</th><th>Shares</th><th>Price</th><th>Value</th><th>P&amp;L</th><th>Strategy</th><th>What Happened</th><th>Regime</th></tr></thead>
+<tbody><tr><td>2026-03-20</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>298.7</td><td>$43.11</td><td>$12,878</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback) + MR Long 3 (SMA250 Bounce)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>UPTREND</td></tr><tr><td>2026-03-18</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>378.4</td><td>$44.85</td><td>$16,970</td><td class="bear">$-1,346</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>UPTREND</td></tr><tr><td>2026-03-17</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>187.3</td><td>$47.70</td><td>$8,932</td><td class="bear">$-133</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-03-16</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>573.0</td><td>$48.14</td><td>$27,586</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-03-12</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>218.3</td><td>$47.33</td><td>$10,330</td><td class="bear">$-438</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-03-09</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>212.5</td><td>$49.43</td><td>$10,507</td><td class="">—</td><td style="font-size:11px">Momentum Long + MR Long 1 (SMA20 Pullback) + MR Long 2 (Deep Pullback) (EXIT)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-03-06</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>218.0</td><td>$46.17</td><td>$10,066</td><td class="bear">$-663</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-03-04</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>373.3</td><td>$49.42</td><td>$18,445</td><td class="bull">$+77</td><td style="font-size:11px">Momentum Long + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-03-03</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>329.2</td><td>$48.71</td><td>$16,038</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-03-02</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>90.4</td><td>$46.79</td><td>$4,229</td><td class="bear">$-253</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-27</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>150.5</td><td>$47.48</td><td>$7,147</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-25</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>283.7</td><td>$51.60</td><td>$14,643</td><td class="bull">$+329</td><td style="font-size:11px">Momentum Long + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-24</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>493.3</td><td>$50.58</td><td>$24,948</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-23</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>582.4</td><td>$48.43</td><td>$28,203</td><td class="bear">$-943</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-20</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>580.0</td><td>$49.55</td><td>$28,743</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-12</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>544.0</td><td>$48.13</td><td>$26,183</td><td class="bear">$-2,005</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-11</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>553.9</td><td>$51.83</td><td>$28,706</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-10</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>540.3</td><td>$52.18</td><td>$28,196</td><td class="bull">$+230</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-09</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>533.0</td><td>$52.00</td><td>$27,711</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-06</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>151.4</td><td>$50.03</td><td>$7,577</td><td class="bear">$-141</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-05</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>157.7</td><td>$48.36</td><td>$7,626</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-02-03</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>277.6</td><td>$52.11</td><td>$14,465</td><td class="bear">$-426</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-01-30</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>300.3</td><td>$53.19</td><td>$15,971</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-01-27</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>230.5</td><td>$57.67</td><td>$13,292</td><td class="bull">$+680</td><td style="font-size:11px">Momentum Long</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-01-22</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>261.5</td><td>$53.56</td><td>$14,008</td><td class="bear">$-302</td><td style="font-size:11px">Momentum Long + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-01-21</td><td class="ta">ADD</td><td>TQQQ</td><td class="bull">BUY</td><td>390.6</td><td>$54.35</td><td>$21,226</td><td class="">—</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">Added to position. Continued strength.</td><td>STRONG UPTREND</td></tr><tr><td>2026-01-20</td><td class="tr">REDUCE</td><td>TQQQ</td><td class="bear">SELL</td><td>121.1</td><td>$51.04</td><td>$6,179</td><td class="bear">$-521</td><td style="font-size:11px">Momentum Long (EXIT) + MR Long 2 (Deep Pullback)</td><td style="font-size:11px;color:var(--muted)">Reduced position. Partial profits.</td><td>STRONG UPTREND</td></tr><tr><td>2026-01-15</td><td class="te">NEW ENTRY</td><td>TQQQ</td><td class="bull">BUY</td><td>352.3</td><td>$55.35</td><td>$19,500</td><td class="">—</td><td style="font-size:11px">Momentum Long + MR Long 1 (SMA20 Pullback)</td><td style="font-size:11px;color:var(--muted)">New position. Momentum Long + MR Long 1 (SMA20 Pullback) detected an opportunity.</td><td>STRONG UPTREND</td></tr></tbody></table></div></div></div>
+
+<!-- ===== P&L ===== -->
+<div id="pnl" class="pg">
+<div class="card"><h2>Profit &amp; Loss Overview</h2>
+<div class="grid-3" style="margin-bottom:16px">
+    <div class="card-inner" style="text-align:center"><div class="desc">Total Realised P&amp;L</div><div class="stat-v bear" style="font-size:28px">$-5,856</div></div>
+    <div class="card-inner" style="text-align:center"><div class="desc">Winning Trades</div><div class="stat-v bull" style="font-size:28px">4</div></div>
+    <div class="card-inner" style="text-align:center"><div class="desc">Losing Trades</div><div class="stat-v bear" style="font-size:28px">11</div></div>
+</div>
+<div class="grid-2">
+    <div class="card-inner"><div class="desc">Win Rate</div><div class="stat-v" style="font-size:22px">27%</div></div>
+    <div class="card-inner"><div class="desc">Trades per Month</div><div class="stat-v" style="font-size:22px">~13</div></div>
+</div>
+</div>
+<div class="card"><h2>Social Posts (Ready to Copy)</h2><p class="desc">Review and copy-paste to your platforms.</p><div class="card-inner" style="margin-bottom:8px"><h3>Daily — 2026-03-20</h3><div style="margin-top:6px"><strong>Twitter/X:</strong><pre class="social-pre">🟢 APEX TRADE LAB Daily Signal — 2026-03-20
+
+Regime: UPTREND
+Action: Light long TQQQ (22%)
+
+TQQQ: 22% | SQQQ: 0% | Cash: 78%
+NDX: 23,898 | RSI: 35
+
+Paper trading simulation — not financial advice.
+#TQQQ #SQQQ #AlgoTrading #SystematicTrading #PaperTrading</pre></div><div style="margin-top:4px"><strong>Facebook:</strong><pre class="social-pre">⚡ APEX TRADE LAB — Daily Signal Update
+📅 2026-03-20
+
+🟢 Market Regime: UPTREND
+📊 Action: Light long TQQQ (22%)
+
+Portfolio Allocation:
+  • TQQQ (3x Long): 22%
+  • SQQQ (3x Short): 0%
+  • Cash: 78%
+
+NDX closed at 23,898 | RSI: 35
+
+This is a paper trading simulation for educational purposes.
+Full dashboard: [link in bio]
+
+#TQQQ #SQQQ #AlgoTrading #SystematicTrading #PaperTrading</pre></div></div></div>
+</div>
+
+<!-- ===== TRADE TOOLS ===== -->
+<div id="tools" class="pg">
+<div class="card"><h2>Position Sizing Calculator</h2>
+<div class="calc-grid"><div class="calc-in">
+<div class="fg"><label>Account ($)</label><input type="number" id="psa" value="15000"></div>
+<div class="fg"><label>Risk %</label><input type="number" id="psr" value="2.0" step="0.5"></div>
+<div class="fg"><label>Entry ($)</label><input type="number" id="pse" value="75" step="0.01"></div>
+<div class="fg"><label>Stop ($)</label><input type="number" id="pss" value="71" step="0.01"></div>
+<div class="fg"><label>Ticker</label><select id="psi"><option>TQQQ</option><option>SQQQ</option></select></div>
+<button class="btn" onclick="cPos()">Calculate</button></div>
+<div class="calc-out" id="pso"><div class="placeholder">Enter values and click Calculate</div></div></div></div>
+
+<div class="card"><h2>Stop Loss Framework</h2>
+<div class="grid-3">
+<div class="card-inner"><h3>1. ATR Dynamic</h3><p class="desc">Adapts to volatility.</p>
+<div class="formula">Stop = Entry &minus; (ATR &times; Mult)</div>
+<div class="fg"><label>ATR</label><input type="number" id="sla" value="286.78" step="0.01"></div>
+<div class="fg"><label>Mult</label><select id="slam"><option value="1.5">1.5&times;</option><option value="2.0" selected>2.0&times;</option><option value="2.5">2.5&times;</option></select></div>
+<button class="btn-s" onclick="cATR()">Calculate</button><div id="slar" class="result"></div></div>
+<div class="card-inner"><h3>2. Fixed %</h3><p class="desc">Simple and predictable.</p>
+<div class="formula">Stop = Entry &times; (1 &minus; %)</div>
+<div class="fg"><label>Entry ($)</label><input type="number" id="slfe" value="75" step="0.01"></div>
+<div class="fg"><label>Stop %</label><select id="slfp"><option value="3">3%</option><option value="5" selected>5%</option><option value="7">7%</option></select></div>
+<button class="btn-s" onclick="cFix()">Calculate</button><div id="slfr" class="result"></div></div>
+<div class="card-inner"><h3>3. Regime-Aware</h3><p class="desc">Tighter with trend, wider against it.</p>
+<table class="mini-tbl"><thead><tr><th>Regime</th><th>Long</th><th>Short</th></tr></thead><tbody>
+<tr><td class="bull">Strong Up</td><td>2.5-3.0&times;</td><td>1.0-1.5&times;</td></tr>
+<tr><td class="bull">Up</td><td>2.0-2.5&times;</td><td>1.5&times;</td></tr>
+<tr><td class="bear">Down</td><td>1.5&times;</td><td>2.0-2.5&times;</td></tr>
+<tr><td class="bear">Strong Dn</td><td>1.0-1.5&times;</td><td>2.5-3.0&times;</td></tr></tbody></table>
+<p class="desc" style="margin-top:6px">Now: <strong class="bull">UPTREND</strong></p></div></div></div>
+
+<div class="card"><h2>Entry &amp; Exit Framework</h2><div class="grid-2">
+<div class="card-inner"><h3 class="bull">Entry Checklist</h3><ol><li>Regime: above/below SMA(250)?</li><li>Which strategy triggered?</li><li>Extension from SMA(20)?</li><li>RSI confirm (&lt;30 long, &gt;70 short)?</li><li>Size via calculator &mdash; max 2% risk</li></ol></div>
+<div class="card-inner"><h3 class="bear">Exit Triggers (first wins)</h3><ol><li>Stop hit &rarr; out immediately</li><li>Strategy EXIT signal</li><li>Regime change &rarr; close direction</li></ol><p><strong>Trail:</strong> 1.5&times; ATR profit &rarr; breakeven. 2.5&times; &rarr; trail 1.5&times; ATR.</p></div></div></div>
+</div>
+
+<!-- ===== MARKET REGIME ===== -->
+<div id="regime" class="pg">
+<div class="card">
+    <h2>Current Market Regime <span class="tip" data-tip="Determined by NDX position relative to its 250-day moving average.">&#9432;</span></h2>
+    <div class="regime-badge-wrap">
+        <div class="regime-badge bull">UPTREND</div>
+        <div class="regime-metas">
+            <span>NDX: <strong>23,898</strong></span>
+            <span>vs SMA(250): <strong class="bull">+1.9%</strong></span>
+            <span>RSI: <strong>35</strong></span>
+        </div>
+    </div>
+</div>
+<div class="card"><h2>Regime Map</h2><p class="desc">Hover for details.</p><div class="regime-strip-full" id="regime-map"></div></div>
+<div class="card"><h2>Transitions</h2><div class="tbl-wrap"><table><thead><tr><th>Date</th><th>From</th><th>To</th><th>NDX</th><th>Duration</th><th>Significance</th></tr></thead>
+<tbody><tr><td>2026-03-18</td><td class="bull">STRONG UPTREND</td><td class="bull">UPTREND</td><td>24,425</td><td>2 days</td><td style="font-size:12px;color:var(--muted)">Momentum fading. Still bullish.</td></tr><tr><td>2026-03-16</td><td class="bull">UPTREND</td><td class="bull">STRONG UPTREND</td><td>24,655</td><td>3 days</td><td style="font-size:12px;color:var(--muted)">Acceleration! Scaling up.</td></tr><tr><td>2026-03-13</td><td class="bull">STRONG UPTREND</td><td class="bull">UPTREND</td><td>24,381</td><td>57 days</td><td style="font-size:12px;color:var(--muted)">Momentum fading. Still bullish.</td></tr></tbody></table></div></div>
+<div class="card"><h2>Performance by Regime</h2><div class="grid-4"><div class="card-inner" style="border-top:3px solid #22c55e"><h3>STRONG UPTREND</h3><div class="mini-stats"><div><span class="desc">Time</span><br><strong>91.1%</strong></div><div><span class="desc">Days</span><br><strong>41</strong></div><div><span class="desc">Return</span><br><strong class="bear">-4.7%</strong></div><div><span class="desc">Trades</span><br><strong>26</strong></div></div></div><div class="card-inner" style="border-top:3px solid #86efac"><h3>UPTREND</h3><div class="mini-stats"><div><span class="desc">Time</span><br><strong>8.9%</strong></div><div><span class="desc">Days</span><br><strong>4</strong></div><div><span class="desc">Return</span><br><strong class="bear">-2.2%</strong></div><div><span class="desc">Trades</span><br><strong>2</strong></div></div></div></div></div>
+<div class="card"><h2>Playbook</h2><div class="grid-2">
+<div class="card-inner" style="border-left:3px solid #22c55e"><h3 class="bull">Strong Uptrend</h3><p>Max TQQQ (up to 88%). Buy every dip to SMA(20). BB width scales position size.</p><p><strong>Watch:</strong> &gt;8% above SMA(20) or RSI &gt;75.</p></div>
+<div class="card-inner" style="border-left:3px solid #86efac"><h3 class="bull">Uptrend</h3><p>Mean reversion works best. Buy pullbacks. Standard sizing.</p><p><strong>Watch:</strong> NDX approaching SMA(250).</p></div>
+<div class="card-inner" style="border-left:3px solid #f97316"><h3 class="bear">Downtrend</h3><p>SQQQ via Momentum Shorts. All longs OFF. Short failed bounces.</p><p><strong>Critical:</strong> Do not buy dips below SMA(250).</p></div>
+<div class="card-inner" style="border-left:3px solid #ef4444"><h3 class="bear">Strong Downtrend</h3><p>Max SQQQ. Scale with depth. 2022: system -10.9% vs TQQQ -79%.</p><p><strong>Watch:</strong> RSI &lt;25 = bounce likely.</p></div>
+</div></div></div>
+
+<!-- ===== STRESS TEST ===== -->
+<div id="stress" class="pg">
+<div class="card"><h2>Stress Test Results</h2>
+<p class="desc">Simulated performance during major crashes. TQQQ estimates use synthetic 3x daily returns — actual decay would be worse.</p>
+<p class="desc">No stress test data. Run <code>python main.py --stress-test</code>.</p>
+</div></div>
+
+<!-- ===== AI ANALYST ===== -->
+<div id="ai" class="pg"><div class="card">
+<h2>AI Analyst</h2><p class="desc">Ask questions about signals, performance, or strategy. Your data is pre-loaded.</p>
+<div id="ai-s" style="max-width:480px">
+<div class="fg"><label>Provider</label><select id="aip" onchange="document.getElementById('h1').style.display=this.value==='anthropic'?'block':'none';document.getElementById('h2').style.display=this.value==='openai'?'block':'none'">
+<option value="anthropic">Claude Sonnet</option><option value="openai">GPT-4o</option></select></div>
+<div class="fg"><label>API Key</label><input type="password" id="aik" placeholder="sk-..."></div>
+<button class="btn" onclick="initAI()">Connect</button>
+<div class="hint" id="h1"><a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> &rarr; API Keys &rarr; $5 credit &asymp; 500 questions.</div>
+<div class="hint" id="h2" style="display:none"><a href="https://platform.openai.com" target="_blank" rel="noopener">platform.openai.com</a> &rarr; API Keys &rarr; $5 credit.</div>
+<p class="desc" style="margin-top:6px">&#128274; Your key stays in your browser only.</p>
+</div>
+<div id="ai-b" style="display:none" class="chat-box">
+<div class="chat-msgs" id="msgs"></div>
+<div class="chat-suggest">
+<button onclick="aQ('Why this signal today?')">Why?</button>
+<button onclick="aQ('Explain the last trade')">Last trade</button>
+<button onclick="aQ('Current regime outlook?')">Regime</button>
+<button onclick="aQ('Risk exposure?')">Risk</button>
+<button onclick="aQ('Which strategy is active?')">Active</button>
+<button onclick="aQ('Position size for $15K?')">Size</button>
+</div>
+<div class="chat-input"><input id="ain" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sAI()"><button onclick="sAI()" id="aib">Send</button></div>
+</div></div></div>
+
+<!-- ===== LEARN ===== -->
+<div id="learn" class="pg">
+<div class="card start-here"><h2>&#128218; Start Here</h2><div class="grid-2"><div>
+<h3>What is Apex Trade Lab?</h3><p>A <strong>paper trading simulation</strong> — a virtual portfolio trading TQQQ and SQQQ based on 7 algorithmic strategies. No real money. One decision per day, 10 minutes before market close.</p>
+<h3>What is paper trading?</h3><p>Simulated trading with virtual money. A flight simulator for trading.</p></div><div>
+<h3>How to read the dashboard</h3><p>The <strong>Signal Card</strong> at the top shows what the system is doing and why. The <strong>equity curve</strong> tracks performance vs QQQ. The <strong>regime indicator</strong> shows bull or bear market status.</p>
+<h3>Daily routine (Darwin time)</h3><ol><li>Check signal (7:00 AM)</li><li>Review regime</li><li>Read reasoning</li><li>Place trade if allocation changed</li><li>Return tomorrow</li></ol></div></div></div>
+<div class="card"><h2>Inside the System — 7 Strategies</h2><p class="desc">Each strategy has different entry conditions, goals, and risk profiles. They combine for a smoother equity curve.</p>
+<div class="strat-grid"><div class="strat-card"><div class="strat-head"><span>&#128994; Momentum Long</span><span class="strat-inst">TQQQ</span></div><div class="strat-row"><strong>When:</strong> Uptrend</div><div class="strat-row"><strong>Entry:</strong> NDX breaks above upper Bollinger Band + above SMA(20).</div><div class="strat-row"><strong>Goal:</strong> Ride strong upward momentum.</div><div class="strat-row"><strong>Risk:</strong> Stops if NDX closes below SMA(20).</div><div class="strat-row"><strong>Example:</strong> <em>In a strong bull, NDX pushes above the upper BB. System goes heavily long.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128994; MR Long 1 (SMA20 Pullback)</span><span class="strat-inst">TQQQ</span></div><div class="strat-row"><strong>When:</strong> Uptrend</div><div class="strat-row"><strong>Entry:</strong> NDX pulls back to within 1% of SMA(20).</div><div class="strat-row"><strong>Goal:</strong> Buy dips in uptrends.</div><div class="strat-row"><strong>Risk:</strong> Exits if NDX extends 3%+ above SMA(20).</div><div class="strat-row"><strong>Example:</strong> <em>After a 2-3% pullback in a bull market, the system buys expecting a bounce.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128994; MR Long 2 (Deep Pullback)</span><span class="strat-inst">TQQQ</span></div><div class="strat-row"><strong>When:</strong> Uptrend</div><div class="strat-row"><strong>Entry:</strong> NDX drops below lower Bollinger Band but above SMA(250).</div><div class="strat-row"><strong>Goal:</strong> Buy deep dips aggressively.</div><div class="strat-row"><strong>Risk:</strong> Exits above middle BB.</div><div class="strat-row"><strong>Example:</strong> <em>A sharp 5%+ pullback in uptrend — the system sees a sale.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128994; MR Long 3 (SMA250 Bounce)</span><span class="strat-inst">TQQQ</span></div><div class="strat-row"><strong>When:</strong> Near SMA(250)</div><div class="strat-row"><strong>Entry:</strong> NDX within 3% of SMA(250) + bullish candle.</div><div class="strat-row"><strong>Goal:</strong> Catch bounces at the critical SMA(250) support.</div><div class="strat-row"><strong>Risk:</strong> Exits if extended 5%+ above SMA(20).</div><div class="strat-row"><strong>Example:</strong> <em>NDX tests its 250-day average and bounces.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128308; MR Short (Overextension)</span><span class="strat-inst">SQQQ</span></div><div class="strat-row"><strong>When:</strong> Uptrend (extended)</div><div class="strat-row"><strong>Entry:</strong> NDX 4%+ above SMA(20) AND above upper BB.</div><div class="strat-row"><strong>Goal:</strong> Fade extreme overextension.</div><div class="strat-row"><strong>Risk:</strong> Exits when NDX reverts to SMA(20).</div><div class="strat-row"><strong>Example:</strong> <em>After a massive rally, the system takes a small contrarian short.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128308; Momentum Short 1 (Breakdown)</span><span class="strat-inst">SQQQ</span></div><div class="strat-row"><strong>When:</strong> Downtrend</div><div class="strat-row"><strong>Entry:</strong> NDX closes below SMA(250) + below lower BB.</div><div class="strat-row"><strong>Goal:</strong> Ride the downtrend. Size scales with depth.</div><div class="strat-row"><strong>Risk:</strong> Exits when NDX reclaims SMA(250).</div><div class="strat-row"><strong>Example:</strong> <em>NDX breaks its 250-day average — major bearish signal.</em></div></div><div class="strat-card"><div class="strat-head"><span>&#128308; Momentum Short 2 (Failed Bounce)</span><span class="strat-inst">SQQQ</span></div><div class="strat-row"><strong>When:</strong> Downtrend</div><div class="strat-row"><strong>Entry:</strong> NDX bounced to SMA(20) then closed below it.</div><div class="strat-row"><strong>Goal:</strong> Short bull traps in bear markets.</div><div class="strat-row"><strong>Risk:</strong> Exits if above SMA(20) for 3 days.</div><div class="strat-row"><strong>Example:</strong> <em>In a downtrend, a rally that fails is a classic short entry.</em></div></div></div></div></div>
+
+<!-- ===== COMMUNITY ===== -->
+<div id="community" class="pg">
+<div class="card"><h2>&#128236; Subscribe to Weekly Reports</h2><p class="desc">Weekly P&amp;L summary, trade recaps, regime analysis, market outlook. Free. Unsubscribe anytime.</p>
+<div id="mg1" class="math-gate"><p><strong>Quick verify:</strong></p><div id="mq1" class="mq"></div>
+<div class="fg" style="max-width:180px"><label>Answer</label><input type="number" id="ma1"></div>
+<button class="btn-s" onclick="cm(1)">Verify</button><div id="me1" class="bear" style="font-size:12px"></div></div>
+<div id="sf1" style="display:none">
+<p class="desc">Newsletter launching soon.</p>
+</div></div>
+
+</div>
+
+<!-- VIP -->
+<div id="vip" class="pg"><div class="card"><h2 style="color:var(--purple)">VIP Access</h2>
+<p class="desc">Additional commentary and insights for friends, supporters, and collaborators.</p>
+<div id="vip-gate"><div class="fg" style="max-width:280px"><label>Password</label><input type="password" id="vip-pw" placeholder="Enter VIP password"></div>
+<button class="btn" onclick="checkVIP()" style="background:var(--purple)">Unlock</button><div id="vip-err" class="bear" style="font-size:12px;margin-top:4px"></div></div>
+<div id="vip-c" style="display:none"><div class="card-inner" style="border-left:3px solid var(--purple)"><h3 style="color:var(--purple)">Analyst Notes — 2026-03-20</h3><p><strong>Regime:</strong> UPTREND. NDX +1.9% from SMA(250). RSI 35.</p><p><strong>Performance:</strong> -6.8% total, -7.2% max DD.</p><p><strong>Last shift:</strong> STRONG UPTREND &rarr; UPTREND on 2026-03-18.</p><p><strong>Last trade:</strong> BUY TQQQ on 2026-03-20 — Momentum Long (EXIT) + MR Long 2 (Deep Pullback) + MR Long 3 (SMA250 Bounce)</p></div></div></div></div>
+
+<!-- SERVICES -->
+<div id="services" class="pg">
+<div class="card"><h2>Services</h2><div class="grid-3">
+<div class="card-inner" style="border-top:3px solid var(--green)"><h3>Custom Strategy Dashboard</h3><p>Your strategy coded, backtested, and deployed as a live autonomous dashboard.</p></div>
+<div class="card-inner" style="border-top:3px solid var(--yellow)"><h3>Backtest Report</h3><p>Send your rules, receive full backtest with metrics, equity curve, and risk analysis.</p></div>
+<div class="card-inner" style="border-top:3px solid var(--purple)"><h3>Advertising &amp; Collaboration</h3><p>Feature your product or collaborate on research.</p></div></div></div>
+<div class="card"><h2>Contact</h2>
+
+<div id="mg2" class="math-gate"><p><strong>Verify:</strong></p><div id="mq2" class="mq"></div>
+<div class="fg" style="max-width:180px"><label>Answer</label><input type="number" id="ma2"></div>
+<button class="btn-s" onclick="cm(2)">Verify</button><div id="me2" class="bear" style="font-size:12px"></div></div>
+<div id="sf2" style="display:none"><p class="desc">Contact form coming soon.</p></div></div>
+
+</div>
+
+<footer>
+<p>APEX TRADE LAB &mdash; Paper trading simulation only. Not financial advice.</p>
+<p>Built with Python, Plotly, GitHub Actions. 100% free.</p>
+</footer>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+// ===== THEME CONTROLLER =====
+const THEMES = {
+    light: {
+        bg: '#f8fafc', card: '#fff', cardInner: '#f8fafc', border: '#e2e8f0',
+        text: '#1e293b', muted: '#64748b', gridColor: '#f3f4f6',
+        plotBg: '#fff', plotPaper: '#fff', plotFont: '#374151',
+        chatU: '#f0fdf4', chatUBorder: '#dcfce7', chatA: '#fff', chatABorder: '#e2e8f0',
+        inputBg: '#fff', inputBorder: '#d1d5db', thHead: '#f8fafc',
+    },
+    dark: {
+        bg: '#0f172a', card: '#1e293b', cardInner: '#1a2332', border: '#334155',
+        text: '#e2e8f0', muted: '#94a3b8', gridColor: '#1e293b',
+        plotBg: '#1e293b', plotPaper: '#1e293b', plotFont: '#e2e8f0',
+        chatU: 'rgba(34,197,94,.1)', chatUBorder: 'rgba(34,197,94,.2)', chatA: '#1a2332', chatABorder: '#334155',
+        inputBg: '#1a2332', inputBorder: '#475569', thHead: '#1a2332',
+    }
+};
+
+function applyTheme(t) {
+    const v = THEMES[t];
+    const r = document.documentElement.style;
+    r.setProperty('--bg', v.bg);
+    r.setProperty('--card', v.card);
+    r.setProperty('--card-inner', v.cardInner);
+    r.setProperty('--border', v.border);
+    r.setProperty('--text', v.text);
+    r.setProperty('--muted', v.muted);
+    r.setProperty('--grid-color', v.gridColor);
+    r.setProperty('--input-bg', v.inputBg);
+    r.setProperty('--input-border', v.inputBorder);
+    r.setProperty('--th-head', v.thHead);
+    r.setProperty('--chat-u', v.chatU);
+    r.setProperty('--chat-u-border', v.chatUBorder);
+    r.setProperty('--chat-a', v.chatA);
+    r.setProperty('--chat-a-border', v.chatABorder);
+    document.getElementById('theme-icon').innerHTML = t === 'dark' ? '&#9788;' : '&#9789;';
+    // Re-render charts with new theme
+    if(window._chartsRendered) renderCharts(v);
+    try { localStorage.setItem('apex-theme', t); } catch(e) {}
+}
+
+function toggleTheme() {
+    const cur = document.documentElement.style.getPropertyValue('--bg') === '#0f172a' ? 'light' : 'dark';
+    applyTheme(cur);
+}
+
+// Init theme
+(function() {
+    let t = 'light';
+    try { t = localStorage.getItem('apex-theme') || 'light'; } catch(e) {}
+    applyTheme(t);
+})();
+
+// ===== NAV =====
+function go(id,b){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.querySelectorAll('nav>button,nav .dropdown>button').forEach(x=>x.classList.remove('on'));document.getElementById(id).classList.add('on');if(b)b.classList.add('on');window.scrollTo(0,0)}
+
+// ===== MATH PUZZLES =====
+let mv=[0,0,0,0];
+function gm(q,i){const a=5+Math.floor(Math.random()*20),b=3+Math.floor(Math.random()*15);document.getElementById(q).innerHTML='<span style="font-size:18px;font-weight:600;color:var(--green)">'+a+' + '+b+' = ?</span>';mv[i*2]=a;mv[i*2+1]=b}
+window.addEventListener('load',()=>{gm('mq1',0);gm('mq2',1)});
+function cm(n){const a=+document.getElementById('ma'+n).value;if(a===mv[(n-1)*2]+mv[(n-1)*2+1]){document.getElementById('mg'+n).style.display='none';document.getElementById('sf'+n).style.display='block'}else{document.getElementById('me'+n).textContent='Incorrect.';gm('mq'+n,n-1)}}
+
+// VIP
+const VH='';
+async function checkVIP(){const pw=document.getElementById('vip-pw').value;if(!VH){document.getElementById('vip-err').textContent='VIP not configured.';return};const h=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw)))).map(b=>b.toString(16).padStart(2,'0')).join('');if(h===VH){document.getElementById('vip-gate').style.display='none';document.getElementById('vip-c').style.display='block'}else{document.getElementById('vip-err').textContent='Incorrect.'}}
+
+// Regime strip
+const RM=[{"d": "2026-01-15", "r": "STRONG UPTREND", "rsi": 52.0, "e250": 12.36}, {"d": "2026-01-16", "r": "STRONG UPTREND", "rsi": 51.5, "e250": 12.2}, {"d": "2026-01-20", "r": "STRONG UPTREND", "rsi": 39.9, "e250": 9.75}, {"d": "2026-01-21", "r": "STRONG UPTREND", "rsi": 47.8, "e250": 11.17}, {"d": "2026-01-22", "r": "STRONG UPTREND", "rsi": 51.7, "e250": 11.95}, {"d": "2026-01-23", "r": "STRONG UPTREND", "rsi": 53.4, "e250": 12.25}, {"d": "2026-01-26", "r": "STRONG UPTREND", "rsi": 55.5, "e250": 12.63}, {"d": "2026-01-27", "r": "STRONG UPTREND", "rsi": 59.6, "e250": 13.54}, {"d": "2026-01-28", "r": "STRONG UPTREND", "rsi": 61.0, "e250": 13.81}, {"d": "2026-01-29", "r": "STRONG UPTREND", "rsi": 57.4, "e250": 13.12}, {"d": "2026-01-30", "r": "STRONG UPTREND", "rsi": 49.8, "e250": 11.59}, {"d": "2026-02-02", "r": "STRONG UPTREND", "rsi": 53.5, "e250": 12.31}, {"d": "2026-02-03", "r": "STRONG UPTREND", "rsi": 45.7, "e250": 10.49}, {"d": "2026-02-04", "r": "STRONG UPTREND", "rsi": 38.8, "e250": 8.48}, {"d": "2026-02-05", "r": "STRONG UPTREND", "rsi": 34.6, "e250": 6.94}, {"d": "2026-02-06", "r": "STRONG UPTREND", "rsi": 44.7, "e250": 9.17}, {"d": "2026-02-09", "r": "STRONG UPTREND", "rsi": 47.8, "e250": 9.94}, {"d": "2026-02-10", "r": "STRONG UPTREND", "rsi": 45.8, "e250": 9.26}, {"d": "2026-02-11", "r": "STRONG UPTREND", "rsi": 47.0, "e250": 9.51}, {"d": "2026-02-12", "r": "STRONG UPTREND", "rsi": 39.9, "e250": 7.23}, {"d": "2026-02-13", "r": "STRONG UPTREND", "rsi": 40.8, "e250": 7.38}, {"d": "2026-02-17", "r": "STRONG UPTREND", "rsi": 40.4, "e250": 7.2}, {"d": "2026-02-18", "r": "STRONG UPTREND", "rsi": 44.3, "e250": 8.0}, {"d": "2026-02-19", "r": "STRONG UPTREND", "rsi": 42.7, "e250": 7.51}, {"d": "2026-02-20", "r": "STRONG UPTREND", "rsi": 47.0, "e250": 8.38}, {"d": "2026-02-23", "r": "STRONG UPTREND", "rsi": 42.2, "e250": 7.0}, {"d": "2026-02-24", "r": "STRONG UPTREND", "rsi": 47.3, "e250": 8.09}, {"d": "2026-02-25", "r": "STRONG UPTREND", "rsi": 53.2, "e250": 9.53}, {"d": "2026-02-26", "r": "STRONG UPTREND", "rsi": 48.3, "e250": 8.17}, {"d": "2026-02-27", "r": "STRONG UPTREND", "rsi": 47.2, "e250": 7.78}, {"d": "2026-03-02", "r": "STRONG UPTREND", "rsi": 47.8, "e250": 7.83}, {"d": "2026-03-03", "r": "STRONG UPTREND", "rsi": 43.4, "e250": 6.58}, {"d": "2026-03-04", "r": "STRONG UPTREND", "rsi": 50.1, "e250": 8.1}, {"d": "2026-03-05", "r": "STRONG UPTREND", "rsi": 48.9, "e250": 7.7}, {"d": "2026-03-06", "r": "STRONG UPTREND", "rsi": 43.0, "e250": 5.99}, {"d": "2026-03-09", "r": "STRONG UPTREND", "rsi": 48.7, "e250": 7.28}, {"d": "2026-03-10", "r": "STRONG UPTREND", "rsi": 48.6, "e250": 7.13}, {"d": "2026-03-11", "r": "STRONG UPTREND", "rsi": 48.7, "e250": 7.07}, {"d": "2026-03-12", "r": "STRONG UPTREND", "rsi": 41.8, "e250": 5.13}, {"d": "2026-03-13", "r": "UPTREND", "rsi": 39.7, "e250": 4.39}, {"d": "2026-03-16", "r": "STRONG UPTREND", "rsi": 45.1, "e250": 5.48}, {"d": "2026-03-17", "r": "STRONG UPTREND", "rsi": 47.4, "e250": 5.92}, {"d": "2026-03-18", "r": "UPTREND", "rsi": 42.0, "e250": 4.31}, {"d": "2026-03-19", "r": "UPTREND", "rsi": 41.0, "e250": 3.93}, {"d": "2026-03-20", "r": "UPTREND", "rsi": 35.1, "e250": 1.91}];
+function buildRS(id,full){const el=document.getElementById(id);if(!RM.length)return;let h='';RM.forEach(r=>{const c=r.r==='STRONG UPTREND'?'#22c55e':r.r==='UPTREND'?'#86efac':r.r==='DOWNTREND'?'#f97316':r.r==='STRONG DOWNTREND'?'#ef4444':'#d1d5db';h+=`<div title="${r.d}\n${r.r}\nRSI: ${r.rsi?.toFixed?.(0)||'?'}\nvs SMA250: ${r.e250?.toFixed?.(1)||'?'}%" style="flex:1;height:${full?'28px':'10px'};background:${c}"></div>`});el.innerHTML=h}
+window.addEventListener('load',()=>{buildRS('regime-strip',false);buildRS('regime-map',true)});
+
+// ===== CHART DATA =====
+const _D=["2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20"],_EQ=[100000.0, 99574.52, 98483.91, 99247.7, 98760.21, 99054.51, 99306.72, 100240.32, 100160.98, 100028.55, 99658.09, 100481.06, 99196.74, 98837.66, 98624.73, 99143.05, 99454.45, 99584.43, 99530.22, 96920.57, 96976.06, 96956.71, 97124.43, 97034.12, 97151.0, 96314.09, 96655.61, 97326.65, 96754.04, 95808.55, 95446.77, 96272.93, 96804.1, 96952.04, 95555.0, 96099.08, 96085.93, 96066.98, 95299.92, 95075.42, 95431.39, 95102.73, 93546.0, 93687.61, 93253.36],_BN=[119778.72, 119678.55, 117135.72, 118719.21, 119582.23, 119959.79, 120487.63, 121579.89, 121982.5, 121252.4, 119796.06, 120618.63, 118765.44, 116690.72, 115010.92, 117442.02, 118341.64, 117792.61, 118108.54, 115706.35, 115952.92, 115833.48, 116698.43, 116251.5, 117280.2, 115854.67, 117099.12, 118796.26, 117363.03, 116987.38, 117141.5, 115887.43, 117653.92, 117299.46, 115534.89, 117077.93, 117079.86, 117064.44, 115055.23, 114373.28, 115656.26, 116220.69, 114600.6, 114238.44, 112127.12],_DD=[0.0, -0.43, -1.52, -0.75, -1.24, -0.95, -0.69, 0.0, -0.08, -0.21, -0.58, 0.0, -1.28, -1.64, -1.85, -1.33, -1.02, -0.89, -0.95, -3.54, -3.49, -3.51, -3.34, -3.43, -3.31, -4.15, -3.81, -3.14, -3.71, -4.65, -5.01, -4.19, -3.66, -3.51, -4.9, -4.36, -4.37, -4.39, -5.16, -5.38, -5.03, -5.35, -6.9, -6.76, -7.19];
+const _TA=[19.5, 19.5, 12.0, 34.2, 19.5, 19.5, 19.5, 7.5, 7.5, 7.5, 22.9, 19.5, 8.0, 12.0, 15.2, 8.0, 36.2, 8.0, 36.8, 8.0, 8.0, 8.0, 8.0, 8.0, 37.8, 8.0, 34.2, 19.5, 23.3, 25.5, 20.7, 38.4, 19.5, 19.5, 8.0, 19.5, 19.5, 19.5, 8.0, 12.0, 37.1, 27.3, 8.0, 8.0, 21.6],_SA=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],_CA=[80.5, 80.5, 88.0, 65.8, 80.5, 80.5, 80.5, 92.5, 92.5, 92.5, 77.1, 80.5, 92.0, 88.0, 84.8, 92.0, 63.8, 92.0, 63.2, 92.0, 92.0, 92.0, 92.0, 92.0, 62.2, 92.0, 65.8, 80.5, 76.7, 74.5, 79.3, 61.6, 80.5, 80.5, 92.0, 80.5, 80.5, 80.5, 92.0, 88.0, 62.9, 72.7, 92.0, 92.0, 78.4];
+const _NX=[25547.07, 25529.26, 24987.57, 25326.58, 25518.35, 25605.47, 25713.21, 25939.74, 26022.79, 25884.3, 25552.39, 25738.61, 25338.62, 24891.24, 24548.69, 25075.77, 25268.14, 25127.64, 25201.26, 24687.61, 24732.73, 24701.6, 24898.87, 24797.34, 25012.62, 24708.94, 24977.04, 25329.04, 25034.37, 24960.04, 24992.6, 24720.08, 25093.68, 25020.41, 24643.02, 24967.25, 24956.47, 24965.01, 24533.58, 24380.73, 24655.34, 24780.42, 24425.09, 24355.28, 23898.15],_S20=[25465.91, 25510.0, 25508.41, 25507.43, 25510.26, 25511.14, 25513.99, 25528.76, 25553.62, 25574.71, 25589.84, 25616.46, 25613.32, 25575.9, 25520.64, 25499.07, 25474.17, 25441.17, 25414.13, 25375.22, 25334.5, 25293.12, 25288.68, 25262.22, 25236.93, 25192.11, 25155.3, 25124.76, 25075.34, 25029.13, 25001.14, 24950.21, 24937.96, 24944.42, 24949.14, 24943.71, 24928.13, 24920.0, 24886.61, 24871.27, 24867.4, 24871.34, 24847.65, 24825.55, 24769.83],_S250=[22736.98, 22753.34, 22767.02, 22780.92, 22795.39, 22810.71, 22829.05, 22846.96, 22865.41, 22882.91, 22899.21, 22916.97, 22932.06, 22944.99, 22956.09, 22970.43, 22984.47, 22998.21, 23012.14, 23022.77, 23033.24, 23043.39, 23054.28, 23065.2, 23078.79, 23092.22, 23107.78, 23124.56, 23142.5, 23158.8, 23177.07, 23194.54, 23212.4, 23232.27, 23250.03, 23272.18, 23294.5, 23315.97, 23337.21, 23355.91, 23375.28, 23396.47, 23415.22, 23433.94, 23450.51];
+const _BD=["2026-01-15", "2026-01-21", "2026-01-30", "2026-02-05", "2026-02-09", "2026-02-11", "2026-02-20", "2026-02-24", "2026-02-27", "2026-03-03", "2026-03-09", "2026-03-16", "2026-03-20"],_BP=[25547.07, 25326.58, 25552.39, 24548.69, 25268.14, 25201.26, 25012.62, 24977.04, 24960.04, 24720.08, 24967.25, 24655.34, 23898.15],_BL=["New position. Momentum Long + MR Long 1 (SMA20 Pullback) detected an opportunity.<br>$19,500", "Added to position. Continued strength.<br>$21,226", "Added to position. Continued strength.<br>$15,971", "Added to position. Continued strength.<br>$7,626", "Added to position. Continued strength.<br>$27,711", "Added to position. Continued strength.<br>$28,706", "Added to position. Continued strength.<br>$28,743", "Added to position. Continued strength.<br>$24,948", "Added to position. Continued strength.<br>$7,147", "Added to position. Continued strength.<br>$16,038", "Added to position. Continued strength.<br>$10,507", "Added to position. Continued strength.<br>$27,586", "Added to position. Continued strength.<br>$12,878"];
+const _SD=["2026-01-20", "2026-01-22", "2026-01-27", "2026-02-03", "2026-02-06", "2026-02-10", "2026-02-12", "2026-02-23", "2026-02-25", "2026-03-02", "2026-03-04", "2026-03-06", "2026-03-12", "2026-03-17", "2026-03-18"],_SP=[24987.57, 25518.35, 25939.74, 25338.62, 25075.77, 25127.64, 24687.61, 24708.94, 25329.04, 24992.6, 25093.68, 24643.02, 24533.58, 24780.42, 24425.09],_SL=["Reduced position. Partial profits.<br>$6,179", "Reduced position. Partial profits.<br>$14,008", "Reduced position. Partial profits.<br>$13,292", "Reduced position. Partial profits.<br>$14,465", "Reduced position. Partial profits.<br>$7,577", "Reduced position. Partial profits.<br>$28,196", "Reduced position. Partial profits.<br>$26,183", "Reduced position. Partial profits.<br>$28,203", "Reduced position. Partial profits.<br>$14,643", "Reduced position. Partial profits.<br>$4,229", "Reduced position. Partial profits.<br>$18,445", "Reduced position. Partial profits.<br>$10,066", "Reduced position. Partial profits.<br>$10,330", "Reduced position. Partial profits.<br>$8,932", "Reduced position. Partial profits.<br>$16,970"];
+const _RS=[{"type":"rect","xref":"x","yref":"paper","x0":"2026-01-15","x1":"2026-03-12","y0":0,"y1":1,"fillcolor":"rgba(34,197,94,.08)","line":{"width":0}},{"type":"rect","xref":"x","yref":"paper","x0":"2026-03-13","x1":"2026-03-13","y0":0,"y1":1,"fillcolor":"rgba(134,239,172,.06)","line":{"width":0}},{"type":"rect","xref":"x","yref":"paper","x0":"2026-03-16","x1":"2026-03-17","y0":0,"y1":1,"fillcolor":"rgba(34,197,94,.08)","line":{"width":0}},{"type":"rect","xref":"x","yref":"paper","x0":"2026-03-18","x1":"2026-03-20","y0":0,"y1":1,"fillcolor":"rgba(134,239,172,.06)","line":{"width":0}}];
+
+window._chartsRendered = false;
+function renderCharts(v) {
+    const L = {paper_bgcolor:v.plotPaper,plot_bgcolor:v.plotBg,font:{color:v.plotFont,family:'Inter,sans-serif',size:12},margin:{t:8,r:20,b:35,l:55},xaxis:{gridcolor:v.gridColor},yaxis:{gridcolor:v.gridColor},legend:{bgcolor:'rgba(0,0,0,0)',x:0,y:1},hovermode:'x unified'};
+
+    Plotly.newPlot('eq-c',[
+        {x:_D,y:_EQ,name:'APEX',line:{color:'#22c55e',width:2}},
+        {x:_D,y:_BN,name:'QQQ',line:{color:'#f59e0b',width:1,dash:'dot'}}
+    ],{...L,yaxis:{...L.yaxis,title:'Portfolio Value ($)'},height:360},{responsive:true});
+
+    Plotly.newPlot('dd-c',[
+        {x:_D,y:_DD,name:'Drawdown',fill:'tozeroy',fillcolor:'rgba(239,68,68,.15)',line:{color:'#ef4444',width:1.5}}
+    ],{...L,yaxis:{...L.yaxis,title:'Drawdown %'},height:200},{responsive:true});
+
+    // Regime shapes need to adapt colors for dark mode
+    const rsAdapted = v.plotBg === '#fff' ? _RS : _RS.map(s => {
+        const ns = {...s};
+        if(ns.fillcolor) ns.fillcolor = ns.fillcolor.replace(/\.0[468]\)/,'.12)');
+        return ns;
+    });
+
+    Plotly.newPlot('nx-c',[
+        {x:_D,y:_NX,name:'NDX',line:{color:v.plotFont==='#e2e8f0'?'#e2e8f0':'#374151',width:1.5}},
+        {x:_D,y:_S20,name:'SMA(20)',line:{color:'#f59e0b',width:1,dash:'dash'}},
+        {x:_D,y:_S250,name:'SMA(250)',line:{color:'#ef4444',width:1.5,dash:'dash'}},
+        {x:_BD,y:_BP,name:'Buy',mode:'markers',text:_BL,marker:{color:'#22c55e',size:8,symbol:'triangle-up'},hoverinfo:'text'},
+        {x:_SD,y:_SP,name:'Sell',mode:'markers',text:_SL,marker:{color:'#ef4444',size:8,symbol:'triangle-down'},hoverinfo:'text'}
+    ],{...L,yaxis:{...L.yaxis,title:'NDX'},shapes:_RS,height:400},{responsive:true});
+
+    Plotly.newPlot('al-c',[
+        {x:_D,y:_TA,name:'TQQQ%',fill:'tozeroy',fillcolor:'rgba(34,197,94,.2)',line:{color:'#22c55e'},stackgroup:'a'},
+        {x:_D,y:_SA,name:'SQQQ%',fill:'tonexty',fillcolor:'rgba(239,68,68,.2)',line:{color:'#ef4444'},stackgroup:'a'},
+        {x:_D,y:_CA,name:'Cash%',fill:'tonexty',fillcolor:'rgba(148,163,184,.1)',line:{color:'#94a3b8'},stackgroup:'a'}
+    ],{...L,yaxis:{...L.yaxis,title:'%',range:[0,105]},height:260},{responsive:true});
+
+    window._chartsRendered = true;
+}
+
+// Initial chart render
+window.addEventListener('load', () => {
+    let t = 'light';
+    try { t = localStorage.getItem('apex-theme') || 'light'; } catch(e) {}
+    renderCharts(THEMES[t]);
+});
+
+// ===== CALCULATORS =====
+function cPos(){const a=+document.getElementById('psa').value,r=+document.getElementById('psr').value/100,e=+document.getElementById('pse').value,s=+document.getElementById('pss').value,i=document.getElementById('psi').value;if(!a||!e||!s||s>=e){document.getElementById('pso').innerHTML='<span class="bear">Entry must be above stop.</span>';return};const rd=a*r,rps=Math.abs(e-s),sh=Math.floor(rd/rps),pv=sh*e,pp=pv/a*100;document.getElementById('pso').innerHTML='<div class="rr"><span>Risk Amount</span><span class="bear">$'+rd.toFixed(0)+'</span></div><div class="rr"><span>Shares</span><span class="bull">'+sh+' '+i+'</span></div><div class="rr"><span>Position Value</span><span>$'+pv.toFixed(0)+' ('+pp.toFixed(0)+'%)</span></div><div class="rr"><span>Max Loss</span><span class="bear">$'+(sh*rps).toFixed(0)+'</span></div><hr style="border-color:var(--border)"><div class="rr"><span>Target 1.5R</span><span class="bull">$'+(e+rps*1.5).toFixed(2)+'</span></div><div class="rr"><span>Target 2R</span><span class="bull">$'+(e+rps*2).toFixed(2)+'</span></div><div class="note">Sell 50% at Target 1, stop to breakeven. Trail rest.</div>'}
+function cATR(){const a=+document.getElementById('sla').value,m=+document.getElementById('slam').value,e=+document.getElementById('pse')?.value||75,s=e-(a*m);document.getElementById('slar').textContent='Stop: $'+s.toFixed(2)+' ('+((e-s)/e*100).toFixed(1)+'% risk)'}
+function cFix(){const e=+document.getElementById('slfe').value,p=+document.getElementById('slfp').value/100,s=e*(1-p);document.getElementById('slfr').textContent='Stop: $'+s.toFixed(2)+' ($'+(e-s).toFixed(2)+'/share)'}
+
+// ===== AI CHAT =====
+const CD={"latest": {"date": "2026-03-20", "equity": 93253.36, "cash": 73130.06, "tqqq_value": 20123.29, "sqqq_value": 0.0, "tqqq_alloc": 21.6, "sqqq_alloc": 0, "cash_alloc": 78.4, "ndx_close": 23898.15, "sma20": 24769.83, "sma250": 23450.51, "ext_sma20": -3.52, "ext_sma250": 1.91, "rsi": 35.1, "regime": "UPTREND", "active_strategies": "MR Long 2 (Deep Pullback), MR Long 3 (SMA250 Bounce)", "strategy_details": "MR Long 2 (Deep Pullback): MR Long 2: deep pullback below lower BB, ext=-3.5%; MR Long 3 (SMA250 Bounce): MR Long 3: near SMA250 but no reversal candle"}, "stats": {"starting_capital": 100000, "current_equity": 93253.36, "total_return_pct": -6.75, "cagr_pct": -32.88, "max_drawdown_pct": -7.19, "sharpe_ratio": -3.44, "total_trades": 28, "trades_per_month": 13.3, "win_rate_pct": 26.7, "winning_trades": 4, "losing_trades": 11, "total_realized_pnl": -5856.01, "simulation_days": 64, "last_updated": "2026-03-20"}, "regime_stats": {"STRONG UPTREND": {"days": 41, "avg_daily_pct": -0.117, "total_return_pct": -4.67, "volatility_ann_pct": 11.3, "trades": 26, "pct_of_time": 91.1}, "UPTREND": {"days": 4, "avg_daily_pct": -0.546, "total_return_pct": -2.18, "volatility_ann_pct": 12.2, "trades": 2, "pct_of_time": 8.9}}, "transitions": [{"date": "2026-03-13", "from": "STRONG UPTREND", "to": "UPTREND", "ndx": 24380.73, "dur": 57, "m": "Momentum fading. Still bullish."}, {"date": "2026-03-16", "from": "UPTREND", "to": "STRONG UPTREND", "ndx": 24655.34, "dur": 3, "m": "Acceleration! Scaling up."}, {"date": "2026-03-18", "from": "STRONG UPTREND", "to": "UPTREND", "ndx": 24425.09, "dur": 2, "m": "Momentum fading. Still bullish."}], "recent_trades": [{"date": "2026-02-06", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 151.4306, "price": 50.03, "value": 7576.83, "realized_pnl": -140.53, "equity_after": 99143.05, "allocation_after_pct": 8.0, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 2 (Deep Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 2: recovering below middle BB, ext=-1.7%", "regime": "STRONG UPTREND", "ndx_close": 25075.77, "ndx_vs_sma20": "-1.7%", "ndx_vs_sma250": "+9.2%", "rsi": 44.7, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-09", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 532.9507, "price": 52.0, "value": 27711.3, "realized_pnl": 0.0, "equity_after": 99454.45, "allocation_after_pct": 36.2, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.8%", "regime": "STRONG UPTREND", "ndx_close": 25268.14, "ndx_vs_sma20": "-0.8%", "ndx_vs_sma250": "+9.9%", "rsi": 47.8, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-10", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 540.3114, "price": 52.18, "value": 28195.55, "realized_pnl": 229.66, "equity_after": 99584.43, "allocation_after_pct": 7.9, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 2 (Deep Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 2: recovering below middle BB, ext=-1.2%", "regime": "STRONG UPTREND", "ndx_close": 25127.64, "ndx_vs_sma20": "-1.2%", "ndx_vs_sma250": "+9.3%", "rsi": 45.8, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-11", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 553.8837, "price": 51.83, "value": 28705.52, "realized_pnl": 0.0, "equity_after": 99530.22, "allocation_after_pct": 36.7, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.8%", "regime": "STRONG UPTREND", "ndx_close": 25201.26, "ndx_vs_sma20": "-0.8%", "ndx_vs_sma250": "+9.5%", "rsi": 47.0, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-12", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 544.0476, "price": 48.13, "value": 26182.79, "realized_pnl": -2005.13, "equity_after": 96920.57, "allocation_after_pct": 8.0, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 2 (Deep Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 2: recovering below middle BB, ext=-2.7%", "regime": "STRONG UPTREND", "ndx_close": 24687.61, "ndx_vs_sma20": "-2.7%", "ndx_vs_sma250": "+7.2%", "rsi": 39.9, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-20", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 580.0208, "price": 49.55, "value": 28742.79, "realized_pnl": 0.0, "equity_after": 97151.0, "allocation_after_pct": 37.8, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.9%", "regime": "STRONG UPTREND", "ndx_close": 25012.62, "ndx_vs_sma20": "-0.9%", "ndx_vs_sma250": "+8.4%", "rsi": 47.0, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-23", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 582.405, "price": 48.43, "value": 28203.41, "realized_pnl": -943.46, "equity_after": 96314.09, "allocation_after_pct": 8.0, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 2 (Deep Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 2: recovering below middle BB, ext=-1.9%", "regime": "STRONG UPTREND", "ndx_close": 24708.94, "ndx_vs_sma20": "-1.9%", "ndx_vs_sma250": "+7.0%", "rsi": 42.2, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-24", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 493.2927, "price": 50.58, "value": 24948.41, "realized_pnl": 0.0, "equity_after": 96655.61, "allocation_after_pct": 34.1, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.7%", "regime": "STRONG UPTREND", "ndx_close": 24977.04, "ndx_vs_sma20": "-0.7%", "ndx_vs_sma250": "+8.1%", "rsi": 47.3, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-25", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 283.7479, "price": 51.6, "value": 14642.58, "realized_pnl": 328.56, "equity_after": 97326.65, "allocation_after_pct": 19.5, "hold_days": 0, "strategy": "Momentum Long + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: holding above SMA20, reduced size | MR Long 1: pullback to SMA20, ext=0.8%", "regime": "STRONG UPTREND", "ndx_close": 25329.04, "ndx_vs_sma20": "+0.8%", "ndx_vs_sma250": "+9.5%", "rsi": 53.2, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-02-27", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 150.523, "price": 47.48, "value": 7147.4, "realized_pnl": 0.0, "equity_after": 95808.55, "allocation_after_pct": 25.7, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.3%", "regime": "STRONG UPTREND", "ndx_close": 24960.04, "ndx_vs_sma20": "-0.3%", "ndx_vs_sma250": "+7.8%", "rsi": 47.2, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-02", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 90.3883, "price": 46.79, "value": 4228.96, "realized_pnl": -253.12, "equity_after": 95446.77, "allocation_after_pct": 21.0, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.0%", "regime": "STRONG UPTREND", "ndx_close": 24992.6, "ndx_vs_sma20": "-0.0%", "ndx_vs_sma250": "+7.8%", "rsi": 47.8, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-03", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 329.2355, "price": 48.71, "value": 16038.49, "realized_pnl": 0.0, "equity_after": 96272.93, "allocation_after_pct": 38.3, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.9%", "regime": "STRONG UPTREND", "ndx_close": 24720.08, "ndx_vs_sma20": "-0.9%", "ndx_vs_sma250": "+6.6%", "rsi": 43.4, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-04", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 373.2702, "price": 49.42, "value": 18445.25, "realized_pnl": 77.43, "equity_after": 96804.1, "allocation_after_pct": 19.6, "hold_days": 0, "strategy": "Momentum Long + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: holding above SMA20, reduced size | MR Long 1: pullback to SMA20, ext=0.6%", "regime": "STRONG UPTREND", "ndx_close": 25093.68, "ndx_vs_sma20": "+0.6%", "ndx_vs_sma250": "+8.1%", "rsi": 50.1, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-06", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 218.0326, "price": 46.17, "value": 10065.89, "realized_pnl": -663.03, "equity_after": 95555.0, "allocation_after_pct": 8.0, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 2 (Deep Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 2: recovering below middle BB, ext=-1.2%", "regime": "STRONG UPTREND", "ndx_close": 24643.02, "ndx_vs_sma20": "-1.2%", "ndx_vs_sma250": "+6.0%", "rsi": 43.0, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-09", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 212.5461, "price": 49.43, "value": 10507.15, "realized_pnl": 0.0, "equity_after": 96099.08, "allocation_after_pct": 19.5, "hold_days": 0, "strategy": "Momentum Long + MR Long 1 (SMA20 Pullback) + MR Long 2 (Deep Pullback) (EXIT)", "reasoning": "Momentum: holding above SMA20, reduced size | MR Long 1: pullback to SMA20, ext=0.1% | MR Long 2: recovered above middle BB, exit", "regime": "STRONG UPTREND", "ndx_close": 24967.25, "ndx_vs_sma20": "+0.1%", "ndx_vs_sma250": "+7.3%", "rsi": 48.7, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-12", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 218.2667, "price": 47.33, "value": 10329.76, "realized_pnl": -438.44, "equity_after": 95299.92, "allocation_after_pct": 8.0, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 2 (Deep Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 2: recovering below middle BB, ext=-1.4%", "regime": "STRONG UPTREND", "ndx_close": 24533.58, "ndx_vs_sma20": "-1.4%", "ndx_vs_sma250": "+5.1%", "rsi": 41.8, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-16", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 572.9824, "price": 48.14, "value": 27585.7, "realized_pnl": 0.0, "equity_after": 95431.39, "allocation_after_pct": 37.0, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.9%", "regime": "STRONG UPTREND", "ndx_close": 24655.34, "ndx_vs_sma20": "-0.9%", "ndx_vs_sma250": "+5.5%", "rsi": 45.1, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-17", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 187.2676, "price": 47.7, "value": 8931.94, "realized_pnl": -132.75, "equity_after": 95102.73, "allocation_after_pct": 27.4, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 1 (SMA20 Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 1: pullback to SMA20, ext=-0.4%", "regime": "STRONG UPTREND", "ndx_close": 24780.42, "ndx_vs_sma20": "-0.4%", "ndx_vs_sma250": "+5.9%", "rsi": 47.4, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-18", "ticker": "TQQQ", "action": "SELL", "trade_type": "REDUCE", "shares": 378.4007, "price": 44.85, "value": 16970.35, "realized_pnl": -1346.14, "equity_after": 93546.0, "allocation_after_pct": 8.1, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 2 (Deep Pullback)", "reasoning": "Momentum: closed below SMA20 | MR Long 2: recovering below middle BB, ext=-1.7%", "regime": "UPTREND", "ndx_close": 24425.09, "ndx_vs_sma20": "-1.7%", "ndx_vs_sma250": "+4.3%", "rsi": 42.0, "execution_timing": "D+1 open (decision 10min before close)"}, {"date": "2026-03-20", "ticker": "TQQQ", "action": "BUY", "trade_type": "ADD", "shares": 298.7367, "price": 43.11, "value": 12877.51, "realized_pnl": 0.0, "equity_after": 93253.36, "allocation_after_pct": 21.6, "hold_days": 0, "strategy": "Momentum Long (EXIT) + MR Long 2 (Deep Pullback) + MR Long 3 (SMA250 Bounce)", "reasoning": "Momentum: closed below SMA20 | MR Long 2: deep pullback below lower BB, ext=-3.5% | MR Long 3: near SMA250 but no reversal candle", "regime": "UPTREND", "ndx_close": 23898.15, "ndx_vs_sma20": "-3.5%", "ndx_vs_sma250": "+1.9%", "rsi": 35.1, "execution_timing": "D+1 open (decision 10min before close)"}], "equity_tail": [{"date": "2026-03-02", "equity": 95446.77, "cash": 75395.71, "tqqq_value": 20051.06, "sqqq_value": 0.0, "tqqq_alloc": 20.7, "sqqq_alloc": 0, "cash_alloc": 79.3, "ndx_close": 24992.6, "sma20": 25001.14, "sma250": 23177.07, "ext_sma20": -0.03, "ext_sma250": 7.83, "rsi": 47.8, "regime": "STRONG UPTREND", "active_strategies": "MR Long 1 (SMA20 Pullback)", "strategy_details": "MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=-0.0%"}, {"date": "2026-03-03", "equity": 96272.93, "cash": 59357.22, "tqqq_value": 36915.71, "sqqq_value": 0.0, "tqqq_alloc": 38.4, "sqqq_alloc": 0, "cash_alloc": 61.6, "ndx_close": 24720.08, "sma20": 24950.21, "sma250": 23194.54, "ext_sma20": -0.92, "ext_sma250": 6.58, "rsi": 43.4, "regime": "STRONG UPTREND", "active_strategies": "MR Long 1 (SMA20 Pullback)", "strategy_details": "MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=-0.9%"}, {"date": "2026-03-04", "equity": 96804.1, "cash": 77802.48, "tqqq_value": 19001.62, "sqqq_value": 0.0, "tqqq_alloc": 19.5, "sqqq_alloc": 0, "cash_alloc": 80.5, "ndx_close": 25093.68, "sma20": 24937.96, "sma250": 23212.4, "ext_sma20": 0.62, "ext_sma250": 8.1, "rsi": 50.1, "regime": "STRONG UPTREND", "active_strategies": "Momentum Long, MR Long 1 (SMA20 Pullback)", "strategy_details": "Momentum Long: Momentum: holding above SMA20, reduced size; MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=0.6%"}, {"date": "2026-03-05", "equity": 96952.04, "cash": 77802.48, "tqqq_value": 19149.56, "sqqq_value": 0.0, "tqqq_alloc": 19.5, "sqqq_alloc": 0, "cash_alloc": 80.5, "ndx_close": 25020.41, "sma20": 24944.42, "sma250": 23232.27, "ext_sma20": 0.3, "ext_sma250": 7.7, "rsi": 48.9, "regime": "STRONG UPTREND", "active_strategies": "Momentum Long, MR Long 1 (SMA20 Pullback)", "strategy_details": "Momentum Long: Momentum: holding above SMA20, reduced size; MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=0.3%"}, {"date": "2026-03-06", "equity": 95555.0, "cash": 87868.36, "tqqq_value": 7686.64, "sqqq_value": 0.0, "tqqq_alloc": 8.0, "sqqq_alloc": 0, "cash_alloc": 92.0, "ndx_close": 24643.02, "sma20": 24949.14, "sma250": 23250.03, "ext_sma20": -1.23, "ext_sma250": 5.99, "rsi": 43.0, "regime": "STRONG UPTREND", "active_strategies": "MR Long 2 (Deep Pullback)", "strategy_details": "MR Long 2 (Deep Pullback): MR Long 2: recovering below middle BB, ext=-1.2%"}, {"date": "2026-03-09", "equity": 96099.08, "cash": 77361.21, "tqqq_value": 18737.87, "sqqq_value": 0.0, "tqqq_alloc": 19.5, "sqqq_alloc": 0, "cash_alloc": 80.5, "ndx_close": 24967.25, "sma20": 24943.71, "sma250": 23272.18, "ext_sma20": 0.09, "ext_sma250": 7.28, "rsi": 48.7, "regime": "STRONG UPTREND", "active_strategies": "Momentum Long, MR Long 1 (SMA20 Pullback)", "strategy_details": "Momentum Long: Momentum: holding above SMA20, reduced size; MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=0.1%"}, {"date": "2026-03-10", "equity": 96085.93, "cash": 77361.21, "tqqq_value": 18724.72, "sqqq_value": 0.0, "tqqq_alloc": 19.5, "sqqq_alloc": 0, "cash_alloc": 80.5, "ndx_close": 24956.47, "sma20": 24928.13, "sma250": 23294.5, "ext_sma20": 0.11, "ext_sma250": 7.13, "rsi": 48.6, "regime": "STRONG UPTREND", "active_strategies": "Momentum Long, MR Long 1 (SMA20 Pullback)", "strategy_details": "Momentum Long: Momentum: holding above SMA20, reduced size; MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=0.1%"}, {"date": "2026-03-11", "equity": 96066.98, "cash": 77361.21, "tqqq_value": 18705.76, "sqqq_value": 0.0, "tqqq_alloc": 19.5, "sqqq_alloc": 0, "cash_alloc": 80.5, "ndx_close": 24965.01, "sma20": 24920.0, "sma250": 23315.97, "ext_sma20": 0.18, "ext_sma250": 7.07, "rsi": 48.7, "regime": "STRONG UPTREND", "active_strategies": "Momentum Long, MR Long 1 (SMA20 Pullback)", "strategy_details": "Momentum Long: Momentum: holding above SMA20, reduced size; MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=0.2%"}, {"date": "2026-03-12", "equity": 95299.92, "cash": 87690.97, "tqqq_value": 7608.94, "sqqq_value": 0.0, "tqqq_alloc": 8.0, "sqqq_alloc": 0, "cash_alloc": 92.0, "ndx_close": 24533.58, "sma20": 24886.61, "sma250": 23337.21, "ext_sma20": -1.42, "ext_sma250": 5.13, "rsi": 41.8, "regime": "STRONG UPTREND", "active_strategies": "MR Long 2 (Deep Pullback)", "strategy_details": "MR Long 2 (Deep Pullback): MR Long 2: recovering below middle BB, ext=-1.4%"}, {"date": "2026-03-13", "equity": 95075.42, "cash": 87690.97, "tqqq_value": 7384.45, "sqqq_value": 0.0, "tqqq_alloc": 12.0, "sqqq_alloc": 0, "cash_alloc": 88.0, "ndx_close": 24380.73, "sma20": 24871.27, "sma250": 23355.91, "ext_sma20": -1.97, "ext_sma250": 4.39, "rsi": 39.7, "regime": "UPTREND", "active_strategies": "MR Long 2 (Deep Pullback)", "strategy_details": "MR Long 2 (Deep Pullback): MR Long 2: deep pullback below lower BB, ext=-2.0%"}, {"date": "2026-03-16", "equity": 95431.39, "cash": 60105.27, "tqqq_value": 35326.11, "sqqq_value": 0.0, "tqqq_alloc": 37.1, "sqqq_alloc": 0, "cash_alloc": 62.9, "ndx_close": 24655.34, "sma20": 24867.4, "sma250": 23375.28, "ext_sma20": -0.85, "ext_sma250": 5.48, "rsi": 45.1, "regime": "STRONG UPTREND", "active_strategies": "MR Long 1 (SMA20 Pullback)", "strategy_details": "MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=-0.9%"}, {"date": "2026-03-17", "equity": 95102.73, "cash": 69037.22, "tqqq_value": 26065.51, "sqqq_value": 0.0, "tqqq_alloc": 27.3, "sqqq_alloc": 0, "cash_alloc": 72.7, "ndx_close": 24780.42, "sma20": 24871.34, "sma250": 23396.47, "ext_sma20": -0.37, "ext_sma250": 5.92, "rsi": 47.4, "regime": "STRONG UPTREND", "active_strategies": "MR Long 1 (SMA20 Pullback)", "strategy_details": "MR Long 1 (SMA20 Pullback): MR Long 1: pullback to SMA20, ext=-0.4%"}, {"date": "2026-03-18", "equity": 93546.0, "cash": 86007.57, "tqqq_value": 7538.44, "sqqq_value": 0.0, "tqqq_alloc": 8.0, "sqqq_alloc": 0, "cash_alloc": 92.0, "ndx_close": 24425.09, "sma20": 24847.65, "sma250": 23415.22, "ext_sma20": -1.7, "ext_sma250": 4.31, "rsi": 42.0, "regime": "UPTREND", "active_strategies": "MR Long 2 (Deep Pullback)", "strategy_details": "MR Long 2 (Deep Pullback): MR Long 2: recovering below middle BB, ext=-1.7%"}, {"date": "2026-03-19", "equity": 93687.61, "cash": 86007.57, "tqqq_value": 7680.04, "sqqq_value": 0.0, "tqqq_alloc": 8.0, "sqqq_alloc": 0, "cash_alloc": 92.0, "ndx_close": 24355.28, "sma20": 24825.55, "sma250": 23433.94, "ext_sma20": -1.89, "ext_sma250": 3.93, "rsi": 41.0, "regime": "UPTREND", "active_strategies": "MR Long 2 (Deep Pullback)", "strategy_details": "MR Long 2 (Deep Pullback): MR Long 2: recovering below middle BB, ext=-1.9%"}, {"date": "2026-03-20", "equity": 93253.36, "cash": 73130.06, "tqqq_value": 20123.29, "sqqq_value": 0.0, "tqqq_alloc": 21.6, "sqqq_alloc": 0, "cash_alloc": 78.4, "ndx_close": 23898.15, "sma20": 24769.83, "sma250": 23450.51, "ext_sma20": -3.52, "ext_sma250": 1.91, "rsi": 35.1, "regime": "UPTREND", "active_strategies": "MR Long 2 (Deep Pullback), MR Long 3 (SMA250 Bounce)", "strategy_details": "MR Long 2 (Deep Pullback): MR Long 2: deep pullback below lower BB, ext=-3.5%; MR Long 3 (SMA250 Bounce): MR Long 3: near SMA250 but no reversal candle"}]};
+const SYS='You are APEX TRADE LAB AI Analyst. Analyze paper trading data from a 7-strategy TQQQ/SQQQ system. Be educational, concise. PAPER TRADING only.\nDATA:\n'+JSON.stringify(CD);
+let ak='',ah=[],ap='anthropic';
+function initAI(){ap=document.getElementById('aip').value;ak=document.getElementById('aik').value.trim();if(!ak||ak.length<10){alert('Enter valid key');return};document.getElementById('ai-s').style.display='none';document.getElementById('ai-b').style.display='flex';aM('a','Connected ('+ap+'). Data loaded.')}
+function aM(r,t){const d=document.getElementById('msgs'),m=document.createElement('div');m.className='chat-msg chat-'+(r==='u'?'u':'a');m.textContent=t;d.appendChild(m);d.scrollTop=d.scrollHeight}
+function aQ(q){document.getElementById('ain').value=q;sAI()}
+async function sAI(){const q=document.getElementById('ain').value.trim();if(!q)return;document.getElementById('ain').value='';aM('u',q);ah.push({role:'user',content:q});document.getElementById('aib').disabled=true;
+try{let r='';if(ap==='anthropic'){const f=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':ak,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYS,messages:ah.slice(-8)})});const d=await f.json();r=d.content?.map(c=>c.text||'').join('\n')||d.error?.message||'Error'}else{const f=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ak},body:JSON.stringify({model:'gpt-4o',max_tokens:1000,messages:[{role:'system',content:SYS},...ah.slice(-8)]})}); const d=await f.json();r=d.choices?.[0]?.message?.content||d.error?.message||'Error'}
+aM('a',r);ah.push({role:'assistant',content:r})}catch(e){aM('a','Error: '+e.message)}document.getElementById('aib').disabled=false}
+
+// Tooltips
+document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('.tip').forEach(el=>{el.addEventListener('mouseenter',e=>{const t=el.getAttribute('data-tip');const d=document.createElement('div');d.className='tip-box';d.textContent=t;d.style.left=Math.min(e.pageX,window.innerWidth-260)+'px';d.style.top=(e.pageY-40)+'px';document.body.appendChild(d);el._tip=d});el.addEventListener('mouseleave',()=>{if(el._tip)el._tip.remove()})});});
+</script></body></html>
